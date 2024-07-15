@@ -15,6 +15,8 @@ import org.springframework.context.annotation.Configuration;
         servers = {
                 @Server(description = "dev env",
                         url = "http://localhost:8080/api"),
+                @Server(description = "on the server",
+                        url = "http://34.126.91.181/api")
         }
 
 )
