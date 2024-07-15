@@ -1,0 +1,32 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            mkdir production
+            cd production
+            git clone -b production --single-branch ${{ secrets.REPO_URL }}
+            cd ${{ secrets.REPO_NAME }}
+            git pull
+            chmod +x mvnw
+            ./mvnw package
+            sudo docker kill ${{ secrets.REPO_NAME }}
+            sudo docker rm --force ${{ secrets.REPO_NAME }}
+            sudo docker rmi --force ${{ secrets.REPO_NAME }}
+            sudo docker build -t ${{ secrets.REPO_NAME }} .
+            sudo docker run -d --name ${{ secrets.REPO_NAME }} -p 8080:8080 ${{ secrets.REPO_NAME }}
