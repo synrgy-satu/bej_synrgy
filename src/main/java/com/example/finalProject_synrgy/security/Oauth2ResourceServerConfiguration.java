@@ -23,6 +23,7 @@ public class Oauth2ResourceServerConfiguration extends ResourceServerConfigurerA
             "/error**",
             "/v1/auth/**",
             "/v1/auth",
+            "/v1/bca/**",
             "/oauth/authorize**",
             "/v3/api-docs/**",
             "/swagger-ui/**",
