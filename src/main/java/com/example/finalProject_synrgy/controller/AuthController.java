@@ -1,5 +1,6 @@
 package com.example.finalProject_synrgy.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.example.finalProject_synrgy.dto.auth.*;
 import com.example.finalProject_synrgy.dto.base.BaseResponse;
@@ -30,11 +31,13 @@ public class AuthController {
         return ResponseEntity.ok(BaseResponse.success(authService.login(request), "Success Login User"));
     }
 
+    @Hidden
     @PostMapping("login/google")
     public ResponseEntity<?> loginWithGoogle(@RequestParam MultiValueMap<String, String> parameters) throws IOException {
         return ResponseEntity.ok(BaseResponse.success(authService.signWithGoogle(parameters), "Success Sign Google"));
     }
 
+    @Hidden
     @PostMapping("register/google")
     public ResponseEntity<?> registerWithGoogle(@RequestBody RegisterRequest request) {
         authService.register(request);
