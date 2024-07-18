@@ -90,9 +90,21 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.existsByEmailAddress(request.getEmailAddress())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exist");
         }
+
+        if (userRepository.existsByBankAccountNumber(request.getBankAccountNumber())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bank account number already exist");
+        }
+
+        if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone number already exist");
+        }
+
         User user = new User();
         user.setUsername(request.getUsername().toLowerCase());
         user.setEmailAddress(request.getEmailAddress());
+        user.setBankAccountNumber(request.getBankAccountNumber());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setPin(request.getPin());
         String password = encoder.encode(request.getPassword().replaceAll("\\s+", ""));
         List<Role> r = roleRepository.findByNameIn(roleNames);
 
@@ -287,7 +299,8 @@ public class AuthServiceImpl implements AuthService {
             return register(new RegisterRequest(
                     profile.getEmail(),
                     profile.getEmail(),
-                    profile.getId()
+                    profile.getId(),
+                    "","",""
             ));
         }
         return user;
