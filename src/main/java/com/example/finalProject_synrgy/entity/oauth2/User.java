@@ -11,7 +11,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.*;
 
 @Entity
@@ -99,4 +98,10 @@ public class User extends BaseDate implements UserDetails {
     public boolean isEnabled() {
         return this.enabled;
     }
+
+    private String pin;
+
+    private String phoneNumber;
+
+    private String bankAccountNumber;
 }

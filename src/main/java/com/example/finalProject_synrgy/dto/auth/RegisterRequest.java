@@ -18,4 +18,13 @@ public class RegisterRequest {
     private String emailAddress;
     @NotEmpty(message = "must not empty")
     private String password;
+
+    @NotEmpty(message = "must not empty")
+    private String bankAccountNumber;
+
+    @NotEmpty(message = "must not empty")
+    private String phoneNumber;
+
+    @NotEmpty(message = "must not empty")
+    private String pin;
 }
