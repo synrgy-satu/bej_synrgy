@@ -82,7 +82,41 @@ public class BcaUtils {
         return accessToken.getAccessToken();
     }
 
-    public static String getBalanceInquirySignature(String accountNumber) {
+    public static Boolean isBackAccountNumberExists(String accountNumber) {
+        String endpoint = "/openapi/v1.0/balance-inquiry";
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(getAccessToken());
+        headers.set("X-PARTNER-ID", "KBBABCINDO");
+        headers.set("X-TIMESTAMP", getMainSignature().getTimestamp());
+        headers.set("CHANNEL-ID", "95051");
+        headers.set("X-SIGNATURE", getEndpointSignature(accountNumber, endpoint));
+
+        JSONObject body = new JSONObject();
+        body.put("partnerReferenceNo", "2020102900000000000001");
+        body.put("accountNo", accountNumber);
+        HttpEntity<String> httpEntity = new HttpEntity<>(body.toString(), headers);
+
+        log.info(httpEntity.toString());
+
+        ResponseEntity<String> response = null;
+        try {
+            response = restTemplate.exchange("https://" + BCA_HOST + endpoint,
+                    HttpMethod.POST,
+                    httpEntity,
+                    String.class);
+        } catch (Throwable t) {
+            log.info(t.getMessage());
+            return false;
+        }
+        Optional<String> responseMessage = JsonUtils.GetValue(response.getBody(), "responseMessage");
+        return responseMessage.get().equals("Successful");
+    }
+
+    public static String getEndpointSignature(String accountNumber, String endpoint) {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -91,7 +125,7 @@ public class BcaUtils {
         headers.set("HttpMethod", "POST");
         headers.set("X-TIMESTAMP", getMainSignature().getTimestamp());
         headers.set("X-CLIENT-SECRET", BCA_X_CLIENT_SECRET);
-        headers.set("EndpoinUrl", "/openapi/v1.0/balance-inquiry");
+        headers.set("EndpoinUrl", endpoint);
 
         JSONObject body = new JSONObject();
         body.put("partnerReferenceNo", "2020102900000000000001");
@@ -107,37 +141,5 @@ public class BcaUtils {
         Optional<String> signature = JsonUtils.GetValue(response.getBody(), "signature");
 
         return signature.orElse(null);
-    }
-
-    public static Boolean isBackAccountNumberExists(String accountNumber) {
-        RestTemplate restTemplate = new RestTemplate();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(getAccessToken());
-        headers.set("X-PARTNER-ID", "KBBBABCINDO");
-        headers.set("X-TIMESTAMP", getMainSignature().getTimestamp());
-        headers.set("CHANNEL-ID", "95051");
-        headers.set("X-SIGNATURE", getBalanceInquirySignature(accountNumber));
-
-        JSONObject body = new JSONObject();
-        body.put("partnerReferenceNo", "2020102900000000000001");
-        body.put("accountNo", accountNumber);
-        HttpEntity<String> httpEntity = new HttpEntity<>(body.toString(), headers);
-
-        log.info(httpEntity.toString());
-
-        ResponseEntity<String> response = null;
-        try {
-            response = restTemplate.exchange("https://"+ BCA_HOST +"/openapi/v1.0/balance-inquiry",
-                    HttpMethod.POST,
-                    httpEntity,
-                    String.class);
-        } catch (Throwable t) {
-            log.info(t.getMessage());
-            return false;
-        }
-        Optional<String> responseMessage = JsonUtils.GetValue(response.getBody(), "responseMessage");
-        return responseMessage.get().equals("Successful");
     }
 }
