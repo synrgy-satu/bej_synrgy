@@ -19,7 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Where(clause = "deleted_date is null")
 
-//tes
+//teslagi
 public class Transaction extends BaseDate {
     @Id
     @GeneratedValue(generator = "UUID")
