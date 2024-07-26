@@ -19,7 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Where(clause = "deleted_date is null")
 
-//teslagi
+//tes
 public class Transaction extends BaseDate {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -30,11 +30,8 @@ public class Transaction extends BaseDate {
     @JsonIgnore
     private Integer amount;
 
-    @JsonIgnore
-    private String jenisTransaksi;
-
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "rekening_id")
+    @JoinColumn(name = "user_id")
     private Rekening rekening;
 
     @ManyToOne(cascade = CascadeType.ALL)
