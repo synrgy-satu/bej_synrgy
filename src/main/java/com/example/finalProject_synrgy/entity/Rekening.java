@@ -1,6 +1,8 @@
 package com.example.finalProject_synrgy.entity;
 
 import com.example.finalProject_synrgy.entity.base.BaseDate;
+import com.example.finalProject_synrgy.entity.enums.JenisRekening;
+import com.example.finalProject_synrgy.entity.enums.JenisTransaksi;
 import com.example.finalProject_synrgy.entity.oauth2.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.api.client.util.DateTime;
@@ -32,7 +34,12 @@ public class Rekening extends BaseDate {
     private Integer cardNumber;
 
     @Column(name = "jenis_rekening")
-    private String jenisRekening;
+    @Enumerated(EnumType.STRING)
+    private JenisRekening jenisRekening;
+
+
+//    @Column(name = "jenis_rekening")
+//    private String jenisRekening;
 
 //    @Column(name = "rekening_active_date")
 //    private DateTime rekeningActiveDate;
