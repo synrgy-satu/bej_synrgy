@@ -37,6 +37,7 @@ public class Rekening extends BaseDate {
     @Enumerated(EnumType.STRING)
     private JenisRekening jenisRekening;
 
+
 //    @Column(name = "jenis_rekening")
 //    private String jenisRekening;
 
