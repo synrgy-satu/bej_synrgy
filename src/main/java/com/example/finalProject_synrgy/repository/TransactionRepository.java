@@ -10,6 +10,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 
     Transaction findByAmount(Integer amount);
 
-    Transaction findByJenisTransaksi(String jenisTransaksi);
+    Transaction findByJenisTransaksi(Enum jenisTransaksi);
 
 }

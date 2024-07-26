@@ -5,6 +5,7 @@ import com.google.api.client.util.DateTime;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.Date;
 import java.util.UUID;
 
 public interface RekeningRepository extends JpaRepository<Rekening, UUID>, JpaSpecificationExecutor<Rekening> {
@@ -14,9 +15,9 @@ public interface RekeningRepository extends JpaRepository<Rekening, UUID>, JpaSp
 
     Rekening findByBalance(Integer balance);
 
-    Rekening findByJenisRekening(String jenisRekening);
+    Rekening findByJenisRekening(Enum jenisRekening);
 
-    Rekening findByRekeningActiveDate(DateTime rekeningActiveDate);
+//    Rekening findByRekeningActiveDate(DateTime rekeningActiveDate);
 
-    Rekening findByRekeningExpiredDate(DateTime rekeningExpiredDate);
+    Rekening findByRekeningExpiredDate(Date rekeningExpiredDate);
 }
