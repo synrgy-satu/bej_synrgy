@@ -30,6 +30,9 @@ public class Transaction extends BaseDate {
     @JsonIgnore
     private Integer amount;
 
+    @JsonIgnore
+    private String jenisTransaksi;
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private Rekening rekening;
