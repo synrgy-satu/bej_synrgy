@@ -34,7 +34,7 @@ public class Transaction extends BaseDate {
     private String jenisTransaksi;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "rekening_id")
     private Rekening rekening;
 
     @ManyToOne(cascade = CascadeType.ALL)
