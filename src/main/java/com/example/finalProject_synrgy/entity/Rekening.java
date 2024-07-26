@@ -11,6 +11,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -33,11 +34,11 @@ public class Rekening extends BaseDate {
     @Column(name = "jenis_rekening")
     private String jenisRekening;
 
-    @Column(name = "rekening_active_date")
-    private DateTime rekeningActiveDate;
+//    @Column(name = "rekening_active_date")
+//    private DateTime rekeningActiveDate;
 
     @Column(name = "rekening_expired_date")
-    private DateTime rekeningExpiredDate;
+    private Date rekeningExpiredDate;
 
     @JsonIgnore
     private String pin;
