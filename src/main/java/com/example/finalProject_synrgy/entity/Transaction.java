@@ -40,5 +40,6 @@ public class Transaction extends BaseDate {
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "vendors_id")
     private Vendors vendors;
+    //ini tes
 }
 
