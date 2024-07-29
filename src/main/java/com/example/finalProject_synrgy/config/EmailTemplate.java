@@ -143,6 +143,5 @@ public class EmailTemplate {
                 "</body>\n" +
                 "</html>\n";
     }
-
 }
 

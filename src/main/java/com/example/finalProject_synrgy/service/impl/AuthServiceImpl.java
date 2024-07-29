@@ -12,11 +12,14 @@ import com.example.finalProject_synrgy.config.EmailTemplate;
 import com.example.finalProject_synrgy.config.SimpleStringUtils;
 import com.example.finalProject_synrgy.dto.auth.*;
 import com.example.finalProject_synrgy.entity.oauth2.User;
+import com.example.finalProject_synrgy.entity.oauth2.EmailConfirmationToken;
 import com.example.finalProject_synrgy.entity.oauth2.Role;
 import com.example.finalProject_synrgy.mapper.AuthMapper;
+import com.example.finalProject_synrgy.repository.EmailConfirmationTokenRepository;
 import com.example.finalProject_synrgy.repository.UserRepository;
 import com.example.finalProject_synrgy.repository.oauth2.RoleRepository;
 import com.example.finalProject_synrgy.service.AuthService;
+import com.example.finalProject_synrgy.service.EmailService;
 import com.example.finalProject_synrgy.service.ValidationService;
 import com.example.finalProject_synrgy.service.oauth.Oauth2UserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,19 +29,33 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.keygen.BytesKeyGenerator;
+import org.springframework.security.crypto.keygen.KeyGenerators;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.*;
+
+import javax.mail.MessagingException;
 
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
+
+    @Autowired
+    private EmailConfirmationTokenRepository emailConfirmationTokenRepository;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -69,7 +86,10 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private EmailSender emailSender;
 
-    @Value("${expired.token.password.minute:}")//FILE_SHOW_RUL
+    @Autowired
+    private EmailService emailService;
+
+    @Value("${expired.token.password.minute:30}")
     private int expiredToken;
 
     @Autowired
@@ -78,10 +98,14 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private Oauth2UserDetailService userDetailsService;
 
+    private static final BytesKeyGenerator DEFAULT_TOKEN_GENERATOR = KeyGenerators.secureRandom(15);
+
+    private static final Charset US_ASCII = Charset.forName("US-ASCII");
+
     @Transactional
     public User register(RegisterRequest request) {
         validationService.validate(request);
-        String[] roleNames = {"ROLE_USER", "ROLE_READ", "ROLE_WRITE"}; // admin
+        String[] roleNames = { "ROLE_USER", "ROLE_READ", "ROLE_WRITE" }; // admin
 
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username already exist");
@@ -110,7 +134,23 @@ public class AuthServiceImpl implements AuthService {
 
         user.setRoles(r);
         user.setPassword(password);
-        return userRepository.save(user);
+
+        userRepository.save(user);
+        // Generate and save confirmation token
+        String tokenValue = UUID.randomUUID().toString();
+        EmailConfirmationToken emailConfirmationToken = new EmailConfirmationToken();
+        emailConfirmationToken.setToken(tokenValue);
+        emailConfirmationToken.setUser(user);
+        emailConfirmationTokenRepository.save(emailConfirmationToken);
+
+        // Send confirmation email
+        try {
+            sendRegistrationConfirmationEmail(user, tokenValue);
+        } catch (MessagingException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to send confirmation email");
+        }
+
+        return user;
     }
 
     @Transactional
@@ -134,10 +174,9 @@ public class AuthServiceImpl implements AuthService {
                 "&grant_type=password" +
                 "&client_id=my-client-web" +
                 "&client_secret=password";
-        ResponseEntity<Map> response = restTemplateBuilder.build().exchange(url, HttpMethod.POST, null, new
-                ParameterizedTypeReference<Map>() {
-                }
-        );
+        ResponseEntity<Map> response = restTemplateBuilder.build().exchange(url, HttpMethod.POST, null,
+                new ParameterizedTypeReference<Map>() {
+                });
 
         if (response.getStatusCode() == HttpStatus.OK) {
             User user = userRepository.findByEmailAddress(request.getEmailAddress());
@@ -163,7 +202,8 @@ public class AuthServiceImpl implements AuthService {
         if (found == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Email Not Found");
         }
-        String template = subject.equalsIgnoreCase("Register") ? emailTemplate.getRegisterTemplate() : emailTemplate.getResetPassword();
+        String template = subject.equalsIgnoreCase("Register") ? emailTemplate.getRegisterTemplate()
+                : emailTemplate.getResetPassword();
         if (StringUtils.isEmpty(found.getOtp())) {
             User search;
             String otp;
@@ -202,7 +242,8 @@ public class AuthServiceImpl implements AuthService {
 
         String dateToken = config.convertDateToString(user.getOtpExpiredDate());
         if (Long.parseLong(today) > Long.parseLong(dateToken)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Your token is expired. Please Get token again.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Your token is expired. Please Get token again.");
         }
         user.setEnabled(true);
         userRepository.save(user);
@@ -227,7 +268,8 @@ public class AuthServiceImpl implements AuthService {
     public Object resetPassword(ResetPasswordRequest request) {
         validationService.validate(request);
         User user = userRepository.findByOtp(request.getOtp());
-        if (user == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Otp Not Valid");
+        if (user == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Otp Not Valid");
 
         user.setPassword(encoder.encode(request.getNewPassword().replaceAll("\\s+", "")));
         user.setOtpExpiredDate(null);
@@ -258,7 +300,8 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = map.get("accessToken");
 
         GoogleCredential credential = new GoogleCredential().setAccessToken(accessToken);
-        Oauth2 oauth2 = new Oauth2.Builder(new NetHttpTransport(), new JacksonFactory(), credential).setApplicationName("Oauth2").build();
+        Oauth2 oauth2 = new Oauth2.Builder(new NetHttpTransport(), new JacksonFactory(), credential)
+                .setApplicationName("Oauth2").build();
         Userinfoplus profile;
         try {
             profile = oauth2.userinfo().get().execute();
@@ -270,7 +313,8 @@ public class AuthServiceImpl implements AuthService {
         if (null != user) {
             if (!user.isEnabled()) {
                 sendEmailOtp(new EmailRequest(user.getEmailAddress()), "Activate Account");
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Your Account is disable. Please chek your email for activation.");
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                        "Your Account is disable. Please chek your email for activation.");
             }
 
             String oldPassword = user.getPassword();
@@ -286,8 +330,9 @@ public class AuthServiceImpl implements AuthService {
                     "&client_id=my-client-web" +
                     "&client_secret=password";
             System.out.println(url);
-            ResponseEntity<Map> response = restTemplateBuilder.build().exchange(url, HttpMethod.POST, null, new ParameterizedTypeReference<Map>() {
-            });
+            ResponseEntity<Map> response = restTemplateBuilder.build().exchange(url, HttpMethod.POST, null,
+                    new ParameterizedTypeReference<Map>() {
+                    });
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 user.setPassword(oldPassword);
@@ -295,14 +340,58 @@ public class AuthServiceImpl implements AuthService {
                 return authMapper.toLoginResponse(response);
             }
         } else {
-//            register
+            // register
             return register(new RegisterRequest(
                     profile.getEmail(),
                     profile.getEmail(),
                     profile.getId(),
-                    "","",""
-            ));
+                    "", "", ""));
         }
         return user;
     }
+
+    @Override
+    public void sendRegistrationConfirmationEmail(User user, String token) throws MessagingException {
+        // Log sebelum mengirim email
+        log.info("Sending verification email to: {}", user.getEmailAddress());
+
+        // Siapkan konten email
+        String subject = "Registration Confirmation";
+        EmailConfirmationToken emailConfirmationToken = new EmailConfirmationToken();
+        emailConfirmationToken.setToken(token);
+        emailConfirmationToken.setUser(user);
+
+        // Kirim email menggunakan email service
+        emailService.sendConfirmationEmail(emailConfirmationToken);
+
+        // Log setelah mengirim email
+        log.info("Verification email sent to: {}", user.getEmailAddress());
+    }
+
+    @Override
+    @Transactional
+    public boolean verifyUser(String token) {
+        Optional<EmailConfirmationToken> optionalToken = emailConfirmationTokenRepository.findByToken(token);
+
+        if (!optionalToken.isPresent()) {
+            return false;
+        }
+
+        EmailConfirmationToken emailConfirmationToken = optionalToken.get();
+        User user = emailConfirmationToken.getUser();
+
+        if (user.isEnabled()) {
+            return false; // Token sudah pernah diverifikasi
+        }
+
+        LocalDateTime expiryDate = emailConfirmationToken.getCreatedAt().plusMinutes(expiredToken);
+        if (LocalDateTime.now().isAfter(expiryDate)) {
+            return false; // Token sudah kedaluwarsa
+        }
+
+        user.setEnabled(true);
+        userRepository.save(user);
+        return true;
+    }
+
 }

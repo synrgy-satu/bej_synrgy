@@ -3,22 +3,29 @@ package com.example.finalProject_synrgy.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import com.example.finalProject_synrgy.dto.UserRequest;
 import com.example.finalProject_synrgy.dto.UserResponse;
+import com.example.finalProject_synrgy.entity.oauth2.EmailConfirmationToken;
 import com.example.finalProject_synrgy.entity.oauth2.User;
 import com.example.finalProject_synrgy.mapper.UserMapper;
+import com.example.finalProject_synrgy.repository.EmailConfirmationTokenRepository;
 import com.example.finalProject_synrgy.repository.UserRepository;
 import com.example.finalProject_synrgy.service.UserService;
 import com.example.finalProject_synrgy.service.ValidationService;
+import com.google.api.client.util.Value;
+import com.google.common.base.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.persistence.criteria.Predicate;
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -27,6 +34,9 @@ import java.util.UUID;
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService {
+
+        @Autowired
+    private EmailConfirmationTokenRepository emailConfirmationTokenRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -39,6 +49,10 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder encoder;
+
+    @Value("${expired.token.password.minute:30}")
+private int expiredToken;
+
 
     @Override
     public UserResponse create(UserRequest userRequest) {
@@ -126,4 +140,5 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID User not found"));
         return userMapper.toUserResponse(user);
     }
+
 }
