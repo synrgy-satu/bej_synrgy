@@ -1,5 +1,6 @@
 package com.example.finalProject_synrgy.controller;
 
+import com.example.finalProject_synrgy.dto.UserRequest;
 import com.example.finalProject_synrgy.dto.base.BaseResponse;
 import com.example.finalProject_synrgy.dto.rekening.CheckExistRequest;
 import com.example.finalProject_synrgy.dto.schemas.NullDataSchema;
@@ -38,7 +39,13 @@ public class RekeningController {
             )
     })
     @PostMapping("/check")
-    public ResponseEntity<?> register(@RequestBody CheckExistRequest req) {
+    public ResponseEntity<?> check(@RequestBody CheckExistRequest req) {
         return ResponseEntity.ok(BaseResponse.success(rekeningService.checkIfRekeningExist(req), "Success checking card"));
+    }
+
+    @Operation(summary = "Membuat kartu (hanya untuk debugging)")
+    @PostMapping()
+    public ResponseEntity<?> create(@RequestBody CheckExistRequest req) {
+        return ResponseEntity.ok(BaseResponse.success(rekeningService.create(req), "Success Create Card"));
     }
 }

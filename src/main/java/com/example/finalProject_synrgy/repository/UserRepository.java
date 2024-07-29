@@ -13,8 +13,6 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
     Boolean existsByUsername(String username);
 
-    Boolean existsByBankAccountNumber(String bankAccountNumber);
-
     Boolean existsByPhoneNumber(String phoneNumber);
 
     User findByUsername(String username);

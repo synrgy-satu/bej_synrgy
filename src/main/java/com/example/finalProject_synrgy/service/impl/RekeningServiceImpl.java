@@ -24,14 +24,24 @@ public class RekeningServiceImpl implements RekeningService {
 
         Rekening rekening = rekeningRepository.findByCardNumber(req.getCardNumber());
 
-        if(rekening == null ||
-                rekening.getExpiredDateMonth().equals(req.getMonth()) ||
-                rekening.getExpiredDateYear().equals(req.getYear())
-        ) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Card Not Found");
+        if(rekening == null || rekening.getExpiredDateMonth() != req.getMonth() || rekening.getExpiredDateYear() != req.getYear()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Card Not Found");
 
         if(rekening.getUser() != null) throw new ResponseStatusException(HttpStatus.CONFLICT, "Card exist, but already used by other user");
 
         return "Card exist";
+    }
+
+    public Rekening create(CheckExistRequest req) {
+        Rekening rekening = new Rekening();
+
+        if(rekeningRepository.existsByCardNumber(req.getCardNumber())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Card already exist");
+        rekening.setCardNumber(req.getCardNumber());
+        rekening.setExpiredDateMonth(req.getMonth());
+        rekening.setExpiredDateYear(req.getYear());
+
+        rekeningRepository.save(rekening);
+
+        return rekeningRepository.findByCardNumber(req.getCardNumber());
     }
 
 }
