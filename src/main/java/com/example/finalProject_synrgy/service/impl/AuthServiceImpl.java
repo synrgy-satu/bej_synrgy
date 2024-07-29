@@ -1,5 +1,8 @@
 package com.example.finalProject_synrgy.service.impl;
 
+import com.example.finalProject_synrgy.entity.Rekening;
+import com.example.finalProject_synrgy.repository.RekeningRepository;
+import com.example.finalProject_synrgy.service.RekeningService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -33,6 +36,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
@@ -78,10 +82,13 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private Oauth2UserDetailService userDetailsService;
 
+    @Autowired
+    private RekeningRepository rekeningRepository;
+
     @Transactional
     public User register(RegisterRequest request) {
         validationService.validate(request);
-        String[] roleNames = {"ROLE_USER", "ROLE_READ", "ROLE_WRITE"}; // admin
+        String[] roleNames = {"ROLE_USER", "ROLE_READ", "ROLE_WRITE"};
 
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username already exist");
@@ -91,8 +98,13 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exist");
         }
 
-        if (userRepository.existsByBankAccountNumber(request.getBankAccountNumber())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bank account number already exist");
+        Rekening rekening = rekeningRepository.findByCardNumber(request.getCardNumber());
+        if (rekening == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Card doesn't exist");
+        }
+
+        if (rekening.getUser() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Card already used by other user");
         }
 
         if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
@@ -102,14 +114,21 @@ public class AuthServiceImpl implements AuthService {
         User user = new User();
         user.setUsername(request.getUsername().toLowerCase());
         user.setEmailAddress(request.getEmailAddress());
-        user.setBankAccountNumber(request.getBankAccountNumber());
+
+        List<Rekening> rekenings = new ArrayList<>();
+        rekenings.add(rekening);
+        user.setRekenings(rekenings);
+
         user.setPhoneNumber(request.getPhoneNumber());
         user.setPin(request.getPin());
-        String password = encoder.encode(request.getPassword().replaceAll("\\s+", ""));
-        List<Role> r = roleRepository.findByNameIn(roleNames);
+        user.setEnabled(false);
 
-        user.setRoles(r);
+        String password = encoder.encode(request.getPassword().replaceAll("\\s+", ""));
         user.setPassword(password);
+
+        List<Role> r = roleRepository.findByNameIn(roleNames);
+        user.setRoles(r);
+
         return userRepository.save(user);
     }
 
@@ -251,58 +270,57 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    @Override
-    @Transactional
-    public Object signWithGoogle(MultiValueMap<String, String> parameters) throws IOException {
-        Map<String, String> map = parameters.toSingleValueMap();
-        String accessToken = map.get("accessToken");
-
-        GoogleCredential credential = new GoogleCredential().setAccessToken(accessToken);
-        Oauth2 oauth2 = new Oauth2.Builder(new NetHttpTransport(), new JacksonFactory(), credential).setApplicationName("Oauth2").build();
-        Userinfoplus profile;
-        try {
-            profile = oauth2.userinfo().get().execute();
-        } catch (GoogleJsonResponseException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, e.getDetails().getMessage());
-        }
-        profile.toPrettyString();
-        User user = userRepository.findByEmailAddress(profile.getEmail());
-        if (null != user) {
-            if (!user.isEnabled()) {
-                sendEmailOtp(new EmailRequest(user.getEmailAddress()), "Activate Account");
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Your Account is disable. Please chek your email for activation.");
-            }
-
-            String oldPassword = user.getPassword();
-            if (!encoder.matches(profile.getId(), oldPassword)) {
-                user.setPassword(encoder.encode(profile.getId()));
-                userRepository.save(user);
-            }
-
-            String url = authUrl +
-                    "?username=" + user.getUsername() +
-                    "&password=" + profile.getId() +
-                    "&grant_type=password" +
-                    "&client_id=my-client-web" +
-                    "&client_secret=password";
-            System.out.println(url);
-            ResponseEntity<Map> response = restTemplateBuilder.build().exchange(url, HttpMethod.POST, null, new ParameterizedTypeReference<Map>() {
-            });
-
-            if (response.getStatusCode() == HttpStatus.OK) {
-                user.setPassword(oldPassword);
-                userRepository.save(user);
-                return authMapper.toLoginResponse(response);
-            }
-        } else {
-//            register
-            return register(new RegisterRequest(
-                    profile.getEmail(),
-                    profile.getEmail(),
-                    profile.getId(),
-                    "","",""
-            ));
-        }
-        return user;
-    }
+//    @Override
+//    @Transactional
+//    public Object signWithGoogle(MultiValueMap<String, String> parameters) throws IOException {
+//        Map<String, String> map = parameters.toSingleValueMap();
+//        String accessToken = map.get("accessToken");
+//
+//        GoogleCredential credential = new GoogleCredential().setAccessToken(accessToken);
+//        Oauth2 oauth2 = new Oauth2.Builder(new NetHttpTransport(), new JacksonFactory(), credential).setApplicationName("Oauth2").build();
+//        Userinfoplus profile;
+//        try {
+//            profile = oauth2.userinfo().get().execute();
+//        } catch (GoogleJsonResponseException e) {
+//            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, e.getDetails().getMessage());
+//        }
+//        profile.toPrettyString();
+//        User user = userRepository.findByEmailAddress(profile.getEmail());
+//        if (null != user) {
+//            if (!user.isEnabled()) {
+//                sendEmailOtp(new EmailRequest(user.getEmailAddress()), "Activate Account");
+//                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Your Account is disable. Please chek your email for activation.");
+//            }
+//
+//            String oldPassword = user.getPassword();
+//            if (!encoder.matches(profile.getId(), oldPassword)) {
+//                user.setPassword(encoder.encode(profile.getId()));
+//                userRepository.save(user);
+//            }
+//
+//            String url = authUrl +
+//                    "?username=" + user.getUsername() +
+//                    "&password=" + profile.getId() +
+//                    "&grant_type=password" +
+//                    "&client_id=my-client-web" +
+//                    "&client_secret=password";
+//            System.out.println(url);
+//            ResponseEntity<Map> response = restTemplateBuilder.build().exchange(url, HttpMethod.POST, null, new ParameterizedTypeReference<Map>() {
+//            });
+//
+//            if (response.getStatusCode() == HttpStatus.OK) {
+//                user.setPassword(oldPassword);
+//                userRepository.save(user);
+//                return authMapper.toLoginResponse(response);
+//            }
+//        } else {
+//            return register(new RegisterRequest(
+//                    profile.getEmail(),
+//                    profile.getEmail(),
+//                    profile.getId(),
+//                    "","",""
+//            ));
+//        }
+//        return user;
+//    }
 }

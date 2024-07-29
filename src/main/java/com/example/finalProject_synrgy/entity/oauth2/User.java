@@ -1,5 +1,6 @@
 package com.example.finalProject_synrgy.entity.oauth2;
 
+import com.example.finalProject_synrgy.entity.Rekening;
 import com.example.finalProject_synrgy.entity.base.BaseDate;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
@@ -62,7 +63,7 @@ public class User extends BaseDate implements UserDetails {
     @Column(name = "credential_not_expired")
     private boolean credentialsNonExpired = true;
 
-    @ManyToMany(targetEntity = Role.class, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToMany(targetEntity = Role.class, cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
     @JoinTable(
             name = "oauth_user_role",
             joinColumns = {
@@ -103,5 +104,13 @@ public class User extends BaseDate implements UserDetails {
 
     private String phoneNumber;
 
-    private String bankAccountNumber;
+//    @JsonIgnore
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Rekening> rekenings;
+
+//    public void addRekening(Rekening rekening) {
+//        if(this.rekenings == null) rekenings = new ArrayList<>();
+//        rekenings.add(rekening);
+//        rekening.setUser(this);
+//    }
 }
