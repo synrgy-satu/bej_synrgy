@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.UUID;
 
 public interface RekeningRepository extends JpaRepository<Rekening, UUID>, JpaSpecificationExecutor<Rekening> {
-    Rekening findByCardNumber(Integer cardNumber);
+    Rekening findByCardNumber(Long cardNumber);
 
     Rekening findByPin(Integer pin);
 

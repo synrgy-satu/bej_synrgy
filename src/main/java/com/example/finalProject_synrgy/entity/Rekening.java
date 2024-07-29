@@ -31,12 +31,11 @@ public class Rekening extends BaseDate {
 
     @JsonIgnore
     @Column(name = "card_number")
-    private Integer cardNumber;
+    private Long cardNumber;
 
     @Column(name = "jenis_rekening")
     @Enumerated(EnumType.STRING)
     private JenisRekening jenisRekening;
-
 
 //    @Column(name = "jenis_rekening")
 //    private String jenisRekening;
@@ -46,6 +45,12 @@ public class Rekening extends BaseDate {
 
     @Column(name = "rekening_expired_date")
     private Date rekeningExpiredDate;
+
+    @Column(name = "expired_date_month")
+    private Integer expiredDateMonth;
+
+    @Column(name = "expired_date_year")
+    private Integer expiredDateYear;
 
     @JsonIgnore
     private String pin;
