@@ -1,7 +1,6 @@
 package com.example.finalProject_synrgy.controller;
 
 import com.example.finalProject_synrgy.dto.schemas.*;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,10 +12,8 @@ import com.example.finalProject_synrgy.dto.base.BaseResponse;
 import com.example.finalProject_synrgy.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.security.Principal;
 
 @Tag(name = "Auth")
@@ -55,7 +52,7 @@ public class AuthController {
             ),
             @ApiResponse(responseCode = "404",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = NullDataSchema.class))},
-                    description = "Email tidak terdaftar"
+                    description = "Email tidak terdaftar atau belum terverifikasi"
             )
     })
     @PostMapping("login")

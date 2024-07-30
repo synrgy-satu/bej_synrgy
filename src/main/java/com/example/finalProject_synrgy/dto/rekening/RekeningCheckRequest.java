@@ -4,7 +4,7 @@ import lombok.Data;
 import org.hibernate.validator.constraints.Range;
 
 @Data
-public class CheckExistRequest {
+public class RekeningCheckRequest {
     @Range(min = 1000000000000000L, max = 9999999999999999L, message = "must in valid range (1000000000000000 - 9999999999999999) (16 digit)")
     private Long cardNumber;
 

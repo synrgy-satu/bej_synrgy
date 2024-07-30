@@ -1,7 +1,8 @@
 package com.example.finalProject_synrgy.service.impl;
 
-import com.example.finalProject_synrgy.dto.rekening.CheckExistRequest;
+import com.example.finalProject_synrgy.dto.rekening.RekeningCheckRequest;
 import com.example.finalProject_synrgy.entity.Rekening;
+import com.example.finalProject_synrgy.entity.enums.JenisRekening;
 import com.example.finalProject_synrgy.repository.RekeningRepository;
 import com.example.finalProject_synrgy.service.RekeningService;
 import com.example.finalProject_synrgy.service.ValidationService;
@@ -19,7 +20,7 @@ public class RekeningServiceImpl implements RekeningService {
     @Autowired
     ValidationService validationService;
 
-    public String checkIfRekeningExist(CheckExistRequest req) {
+    public String checkIfRekeningExist(RekeningCheckRequest req) {
         validationService.validate(req);
 
         Rekening rekening = rekeningRepository.findByCardNumber(req.getCardNumber());
@@ -31,17 +32,22 @@ public class RekeningServiceImpl implements RekeningService {
         return "Card exist";
     }
 
-    public Rekening create(CheckExistRequest req) {
+    public Rekening create(RekeningCheckRequest req) {
+        validationService.validate(req);
         Rekening rekening = new Rekening();
 
         if(rekeningRepository.existsByCardNumber(req.getCardNumber())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Card already exist");
         rekening.setCardNumber(req.getCardNumber());
         rekening.setExpiredDateMonth(req.getMonth());
         rekening.setExpiredDateYear(req.getYear());
+        rekening.setJenisRekening(JenisRekening.DEBIT);
+        rekening.setBalance(4200000);
 
-        rekeningRepository.save(rekening);
+        return rekeningRepository.save(rekening);
+    }
 
-        return rekeningRepository.findByCardNumber(req.getCardNumber());
+    public Object read() {
+        return rekeningRepository.findAll();
     }
 
 }

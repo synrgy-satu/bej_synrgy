@@ -88,6 +88,10 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public User register(RegisterRequest request) {
         validationService.validate(request);
+
+        if(!request.getPhoneNumber().matches("\\d+")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone number must be a number");
+        if(!request.getPin().matches("\\d+")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pin must be a number");
+
         String[] roleNames = {"ROLE_USER", "ROLE_READ", "ROLE_WRITE"};
 
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -99,13 +103,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Rekening rekening = rekeningRepository.findByCardNumber(request.getCardNumber());
-        if (rekening == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Card doesn't exist");
-        }
+        if (rekening == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Card doesn't exist");
 
-        if (rekening.getUser() != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Card already used by other user");
-        }
+        if (rekening.getUser() != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Card already used by other user");
 
         if (userRepository.existsByPhoneNumber(request.getPhoneNumber())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone number already exist");
@@ -115,13 +115,15 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(request.getUsername().toLowerCase());
         user.setEmailAddress(request.getEmailAddress());
 
+        rekening.setUser(user);
+
         List<Rekening> rekenings = new ArrayList<>();
         rekenings.add(rekening);
         user.setRekenings(rekenings);
 
         user.setPhoneNumber(request.getPhoneNumber());
         user.setPin(request.getPin());
-        user.setEnabled(false);
+        user.setEnabled(true);
 
         String password = encoder.encode(request.getPassword().replaceAll("\\s+", ""));
         user.setPassword(password);
