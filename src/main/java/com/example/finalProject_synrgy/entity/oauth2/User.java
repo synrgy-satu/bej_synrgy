@@ -43,9 +43,11 @@ public class User extends BaseDate implements UserDetails {
     @JsonIgnore
     private Date expiredVerifyToken;
 
+    @JsonIgnore
     @Column(length = 100, nullable = true)
     private String otp;
 
+    @JsonIgnore
     private Date otpExpiredDate;
 
     @JsonIgnore
@@ -63,6 +65,7 @@ public class User extends BaseDate implements UserDetails {
     @Column(name = "credential_not_expired")
     private boolean credentialsNonExpired = true;
 
+    @JsonIgnore
     @ManyToMany(targetEntity = Role.class, cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
     @JoinTable(
             name = "oauth_user_role",
@@ -75,6 +78,7 @@ public class User extends BaseDate implements UserDetails {
     )
     private List<Role> roles = new ArrayList<>();
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return this.roles;
@@ -107,10 +111,4 @@ public class User extends BaseDate implements UserDetails {
 //    @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Rekening> rekenings;
-
-//    public void addRekening(Rekening rekening) {
-//        if(this.rekenings == null) rekenings = new ArrayList<>();
-//        rekenings.add(rekening);
-//        rekening.setUser(this);
-//    }
 }

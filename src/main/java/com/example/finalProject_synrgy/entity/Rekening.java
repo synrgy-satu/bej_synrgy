@@ -21,7 +21,6 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-
 public class Rekening extends BaseDate {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -29,7 +28,6 @@ public class Rekening extends BaseDate {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @JsonIgnore
     @Column(name = "card_number")
     private Long cardNumber;
 
@@ -43,6 +41,7 @@ public class Rekening extends BaseDate {
 //    @Column(name = "rekening_active_date")
 //    private DateTime rekeningActiveDate;
 
+    @JsonIgnore
     @Column(name = "rekening_expired_date")
     private Date rekeningExpiredDate;
 
@@ -55,10 +54,10 @@ public class Rekening extends BaseDate {
     @JsonIgnore
     private String pin;
 
-    @JsonIgnore
     private Integer balance;
 
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @JsonIgnore
+    @ManyToOne(targetEntity = User.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 }
