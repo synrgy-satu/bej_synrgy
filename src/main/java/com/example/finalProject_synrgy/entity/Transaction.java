@@ -10,6 +10,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -18,10 +19,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Where(clause = "deleted_date is null")
-
-
-//tes
-
 public class Transaction extends BaseDate {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -31,20 +28,21 @@ public class Transaction extends BaseDate {
 
     private Integer amount;
 
-
-
     @Enumerated(EnumType.STRING)
     private JenisTransaksi jenisTransaksi;
 
     private Boolean isDebited;
+
 
 //    @JsonIgnore
 //    private String jenisTransaksi;
 
 
 
+
+    @JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "rekening_id")
     private Rekening rekening;
 
     @ManyToOne(cascade = CascadeType.ALL)
