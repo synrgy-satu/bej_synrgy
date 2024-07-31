@@ -2,18 +2,16 @@ package com.example.finalProject_synrgy.entity;
 
 import com.example.finalProject_synrgy.entity.base.BaseDate;
 import com.example.finalProject_synrgy.entity.enums.JenisRekening;
-import com.example.finalProject_synrgy.entity.enums.JenisTransaksi;
 import com.example.finalProject_synrgy.entity.oauth2.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.api.client.util.DateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -60,5 +58,9 @@ public class Rekening extends BaseDate {
     @ManyToOne(targetEntity = User.class, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "rekening", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Transaction> transactions;
 }
 
