@@ -33,12 +33,7 @@ public class Transaction extends BaseDate {
 
     private Boolean isDebited;
 
-
-//    @JsonIgnore
-//    private String jenisTransaksi;
-
-
-
+//    tespush
 
     @JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL)
