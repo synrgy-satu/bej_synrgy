@@ -2,6 +2,7 @@ package com.example.finalProject_synrgy.entity;
 
 import com.example.finalProject_synrgy.entity.base.BaseDate;
 import com.example.finalProject_synrgy.entity.enums.JenisTransaksi;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,8 +38,8 @@ public class Transaction extends BaseDate {
 
     private Boolean isDebited;
 
-    @JsonIgnore
-    private String jenisTransaksi;
+//    @JsonIgnore
+//    private String jenisTransaksi;
 
 
 
