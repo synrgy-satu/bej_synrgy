@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class InfoSaldoResponse {
     private long customerId;
     private String username;
-    private String accountNumber;
+    private String cardNumber;
     private Amount amount;
 }
