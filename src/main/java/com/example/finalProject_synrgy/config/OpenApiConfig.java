@@ -10,13 +10,13 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @OpenAPIDefinition(
-        info = @Info(title = "My Food API", version = "1.0"),
+        info = @Info(title = "SATU API", version = "1.0"),
         security = @SecurityRequirement(name = "bearerAuth"),
         servers = {
                 @Server(description = "dev env",
                         url = "http://localhost:8080/api"),
                 @Server(description = "on the server",
-                        url = "http://34.126.91.181/api")
+                        url = "https://satu.cekrek.shop/api")
         }
 
 )
