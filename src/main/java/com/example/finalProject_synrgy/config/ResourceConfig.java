@@ -11,7 +11,8 @@ public class ResourceConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**").allowedMethods()
-                .allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH");
+                .allowedMethods("HEAD", "GET", "PUT", "POST", "DELETE", "PATCH")
+                .allowedOrigins("*");
     }
 
     @Override

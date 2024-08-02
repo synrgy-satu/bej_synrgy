@@ -1,10 +1,12 @@
 package com.example.finalProject_synrgy.seeder;
 
+import com.example.finalProject_synrgy.entity.Vendors;
 import com.example.finalProject_synrgy.entity.oauth2.Client;
 import com.example.finalProject_synrgy.entity.oauth2.Role;
 import com.example.finalProject_synrgy.entity.oauth2.RolePath;
 import com.example.finalProject_synrgy.entity.oauth2.User;
 import com.example.finalProject_synrgy.repository.UserRepository;
+import com.example.finalProject_synrgy.repository.VendorsRepository;
 import com.example.finalProject_synrgy.repository.oauth2.ClientRepository;
 import com.example.finalProject_synrgy.repository.oauth2.RolePathRepository;
 import com.example.finalProject_synrgy.repository.oauth2.RoleRepository;
@@ -72,6 +74,7 @@ public class DatabaseSeeder implements ApplicationRunner {
         this.insertRoles();
         this.insertClients(password);
         this.insertUser(password);
+        this.insertVendors();
     }
 
     @Transactional
@@ -152,6 +155,25 @@ public class DatabaseSeeder implements ApplicationRunner {
             }
 
             userRepository.save(oldUser);
+        }
+    }
+
+    @Autowired
+    VendorsRepository vendorsRepository;
+
+    @Transactional
+    public void insertVendors() {
+        String[] vendorNames = {
+                "SATU",
+                "BCA"
+        };
+        for (String vendorName : vendorNames) {
+            Vendors vendor = vendorsRepository.findByVendorName(vendorName);
+            if (null == vendor) {
+                vendor = new Vendors();
+                vendor.setVendorName(vendorName);
+            }
+            vendorsRepository.save(vendor);
         }
     }
 }
