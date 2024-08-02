@@ -33,6 +33,8 @@ public class Transaction extends BaseDate {
 
     private Boolean isDebited;
 
+    private Boolean isInternal;
+
     @JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "rekening_id")
@@ -41,4 +43,8 @@ public class Transaction extends BaseDate {
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "vendors_id")
     private Vendors vendors;
+
+    private String targetId;
+
+    private String note;
 }

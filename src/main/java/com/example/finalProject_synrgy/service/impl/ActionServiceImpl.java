@@ -8,6 +8,7 @@ import com.example.finalProject_synrgy.entity.enums.JenisTransaksi;
 import com.example.finalProject_synrgy.entity.oauth2.User;
 import com.example.finalProject_synrgy.repository.RekeningRepository;
 import com.example.finalProject_synrgy.repository.UserRepository;
+import com.example.finalProject_synrgy.repository.VendorsRepository;
 import com.example.finalProject_synrgy.service.ActionService;
 import com.example.finalProject_synrgy.service.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,8 @@ public class ActionServiceImpl implements ActionService {
 
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    private VendorsRepository vendorsRepository;
 
     public InfoSaldoResponse getInfoSaldo(Principal principal) {
         return null;
@@ -64,6 +67,9 @@ public class ActionServiceImpl implements ActionService {
         userTransaction.setRekening(userCard);
         userTransaction.setIsDebited(true);
         userTransaction.setJenisTransaksi(JenisTransaksi.TRANSAKSI_KELUAR);
+        userTransaction.setTargetId(targetCard.getCardNumber().toString());
+        userTransaction.setVendors(vendorsRepository.findByVendorName("SATU"));
+        userTransaction.setIsInternal(true);
 
         userCardTransactions.add(userTransaction);
 
@@ -81,6 +87,9 @@ public class ActionServiceImpl implements ActionService {
         targetTransaction.setRekening(targetCard);
         targetTransaction.setIsDebited(false);
         targetTransaction.setJenisTransaksi(JenisTransaksi.TRANSAKSI_MASUK);
+        targetTransaction.setTargetId(userCard.getCardNumber().toString());
+        targetTransaction.setVendors(vendorsRepository.findByVendorName("SATU"));
+        targetTransaction.setIsInternal(true);
 
         targetCardTransactions.add(targetTransaction);
 

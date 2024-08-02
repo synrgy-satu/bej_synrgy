@@ -29,7 +29,7 @@ public class Vendors extends BaseDate {
     private String vendorCode;
 
     @Column(name = "vendor_name")
-    @JsonIgnore
+//    @JsonIgnore
     private String vendorName;
 }
 
