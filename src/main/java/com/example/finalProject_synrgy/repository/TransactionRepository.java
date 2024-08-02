@@ -18,10 +18,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 
     Transaction findByJenisTransaksi(Enum jenisTransaksi);
 
-    @Query("SELECT COUNT(r) > 0 FROM Rekening r WHERE r.cardNumber = :cardNumber")
-    boolean existsByCardNumber(@Param("cardNumber") Long cardNumber);
-
-
     @Query("SELECT new com.example.finalProject_synrgy.dto.mutasi.MutasiResponse(" +
             "u.username, r.cardNumber, r.jenisRekening, " +
             "CONCAT(FUNCTION('TO_CHAR', t.created_date, 'MM-YYYY'), ' ', :periodeMutasi), " +
