@@ -36,8 +36,8 @@ public class ActionServiceImpl implements ActionService {
     @Autowired
     private VendorsRepository vendorsRepository;
 
-    public InfoSaldoResponse getInfoSaldo(Principal principal) {
-        return null;
+    public Object getInfoSaldo(Principal principal) {
+        return rekeningRepository.findAllByUser(userRepository.findByUsername(principal.getName()));
     }
 
     @Transactional
