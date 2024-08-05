@@ -2,6 +2,7 @@ package com.example.finalProject_synrgy.entity;
 
 import com.example.finalProject_synrgy.entity.base.BaseDate;
 import com.example.finalProject_synrgy.entity.enums.JenisTransaksi;
+import com.example.finalProject_synrgy.entity.enums.TransactionReason;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,8 +32,13 @@ public class Transaction extends BaseDate {
     @Enumerated(EnumType.STRING)
     private JenisTransaksi jenisTransaksi;
 
+    @Enumerated(EnumType.STRING)
+    private TransactionReason reason;
+
+    @JsonIgnore
     private Boolean isDebited;
 
+    @JsonIgnore
     private Boolean isInternal;
 
     @JsonIgnore
@@ -44,7 +50,7 @@ public class Transaction extends BaseDate {
     @JoinColumn(name = "vendors_id")
     private Vendors vendors;
 
-    private String targetId;
+    private String referenceNumber;
 
     private String note;
 }

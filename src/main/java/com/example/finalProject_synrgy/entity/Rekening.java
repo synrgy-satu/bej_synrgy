@@ -26,18 +26,15 @@ public class Rekening extends BaseDate {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "card_number")
+    @Column(name = "card_number", unique = true)
     private Long cardNumber;
+
+    @Column(name = "rekening_number", unique = true)
+    private Long rekeningNumber;
 
     @Column(name = "jenis_rekening")
     @Enumerated(EnumType.STRING)
     private JenisRekening jenisRekening;
-
-//    @Column(name = "jenis_rekening")
-//    private String jenisRekening;
-
-//    @Column(name = "rekening_active_date")
-//    private DateTime rekeningActiveDate;
 
     @JsonIgnore
     @Column(name = "rekening_expired_date")
