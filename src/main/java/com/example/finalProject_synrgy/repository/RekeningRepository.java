@@ -25,4 +25,8 @@ public interface RekeningRepository extends JpaRepository<Rekening, UUID>, JpaSp
     boolean existsByCardNumber(Long cardNumber);
 
     List<Rekening> findAllByUser(User user);
+
+    Rekening findByRekeningNumber(Long rekeningNumber);
+
+    boolean existsByRekeningNumber(Long rekeningNumber);
 }
