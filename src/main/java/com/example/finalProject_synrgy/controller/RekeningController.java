@@ -59,4 +59,10 @@ public class RekeningController {
     public ResponseEntity<?> read() {
         return ResponseEntity.ok(BaseResponse.success(rekeningService.read(), "Success Read Card"));
     }
+
+    @Operation(summary = "Lihat informasi rekening")
+    @GetMapping("{rekeningNumber}")
+    public ResponseEntity<?> getCardName(@PathVariable Long rekeningNumber) {
+        return ResponseEntity.ok(BaseResponse.success(rekeningService.readOne(rekeningNumber), "Success Read Card"));
+    }
 }

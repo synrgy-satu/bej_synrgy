@@ -25,7 +25,7 @@ public abstract class BaseDate implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_date", nullable = false, updatable = false)
     @CreationTimestamp
-    @JsonIgnore
+//    @JsonIgnore
     private Date created_date;
 
     @JsonIgnore

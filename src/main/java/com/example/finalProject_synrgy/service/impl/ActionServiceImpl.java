@@ -110,6 +110,6 @@ public class ActionServiceImpl implements ActionService {
 
         rekeningRepository.save(targetCard);
 
-        return userTransaction;
+        return transactionRepository.save(userTransaction);
     }
 }
