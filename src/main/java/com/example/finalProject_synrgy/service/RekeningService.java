@@ -10,4 +10,6 @@ public interface RekeningService {
     Rekening create(RekeningCreateRequest req);
 
     Object read();
+
+    Object readOne(Long rekeningNumber);
 }

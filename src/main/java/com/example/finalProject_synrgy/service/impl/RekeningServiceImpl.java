@@ -1,5 +1,6 @@
 package com.example.finalProject_synrgy.service.impl;
 
+import com.example.finalProject_synrgy.dto.rekening.BriefInformationResponse;
 import com.example.finalProject_synrgy.dto.rekening.RekeningCheckRequest;
 import com.example.finalProject_synrgy.dto.rekening.RekeningCreateRequest;
 import com.example.finalProject_synrgy.entity.Rekening;
@@ -57,6 +58,21 @@ public class RekeningServiceImpl implements RekeningService {
 
     public Object read() {
         return rekeningRepository.findAll();
+    }
+
+    public Object readOne(Long rekeningNumber) {
+        BriefInformationResponse res = new BriefInformationResponse();
+
+        Rekening rekening = rekeningRepository.findByRekeningNumber(rekeningNumber);
+
+        if(rekening == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Rekening not found");
+
+        res.setRekeningNumber(rekening.getRekeningNumber());
+
+        if(rekening.getUser() == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No user associated with this rekening");
+        res.setName(rekening.getUser().getUsername());
+
+        return res;
     }
 
 }
