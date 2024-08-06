@@ -5,9 +5,12 @@ import com.example.finalProject_synrgy.dto.infosaldo.InfoSaldoResponse;
 import com.example.finalProject_synrgy.entity.Rekening;
 import com.example.finalProject_synrgy.entity.Transaction;
 import com.example.finalProject_synrgy.entity.enums.JenisTransaksi;
+import com.example.finalProject_synrgy.entity.enums.TransactionReason;
 import com.example.finalProject_synrgy.entity.oauth2.User;
 import com.example.finalProject_synrgy.repository.RekeningRepository;
+import com.example.finalProject_synrgy.repository.TransactionRepository;
 import com.example.finalProject_synrgy.repository.UserRepository;
+import com.example.finalProject_synrgy.repository.VendorsRepository;
 import com.example.finalProject_synrgy.service.ActionService;
 import com.example.finalProject_synrgy.service.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class ActionServiceImpl implements ActionService {
@@ -33,24 +37,34 @@ public class ActionServiceImpl implements ActionService {
     @Autowired
     UserRepository userRepository;
 
-    public InfoSaldoResponse getInfoSaldo(Principal principal) {
-        return null;
+    @Autowired
+    VendorsRepository vendorsRepository;
+
+    @Autowired
+    TransactionRepository transactionRepository;
+
+    public Object getInfoSaldo(Principal principal) {
+        return rekeningRepository.findAllByUser(userRepository.findByUsername(principal.getName()));
     }
 
     @Transactional
     public Object transfer(Principal principal, TransferReq req) {
         validationService.validate(req);
 
-        Rekening userCard = rekeningRepository.findByCardNumber(req.getDebitedCardNumber());
-        if(userCard == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Debited card doesn't exist");
+        Rekening userCard = rekeningRepository.findByRekeningNumber(req.getDebitedRekeningNumber());
+        if(userCard == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Debited rekening doesn't exist");
 
-        Rekening targetCard = rekeningRepository.findByCardNumber(req.getTargetCardNumber());
-        if(targetCard == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Target card doesn't exist");
+        Rekening targetCard = rekeningRepository.findByRekeningNumber(req.getTargetRekeningNumber());
+        if(targetCard == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Target rekening doesn't exist");
 
         User user = userRepository.findByUsername(principal.getName());
-        if(!user.getRekenings().contains(userCard)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Debited Card is not belong to authenticated user");
+        if(!user.getRekenings().contains(userCard)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Debited rekening is not belong to authenticated user");
 
         if(!Objects.equals(req.getPin(), user.getPin())) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong Pin");
+
+
+        String referenceNumber = UUID.randomUUID().toString();
+
 
         userCard.setBalance(userCard.getBalance() - req.getAmount());
 
@@ -64,6 +78,11 @@ public class ActionServiceImpl implements ActionService {
         userTransaction.setRekening(userCard);
         userTransaction.setIsDebited(true);
         userTransaction.setJenisTransaksi(JenisTransaksi.TRANSAKSI_KELUAR);
+        userTransaction.setReason(TransactionReason.TRANSFER);
+        userTransaction.setReferenceNumber(referenceNumber);
+        userTransaction.setVendors(vendorsRepository.findByVendorName("SATU"));
+        userTransaction.setIsInternal(true);
+        userTransaction.setNote(req.getNote());
 
         userCardTransactions.add(userTransaction);
 
@@ -81,11 +100,16 @@ public class ActionServiceImpl implements ActionService {
         targetTransaction.setRekening(targetCard);
         targetTransaction.setIsDebited(false);
         targetTransaction.setJenisTransaksi(JenisTransaksi.TRANSAKSI_MASUK);
+        targetTransaction.setReason(TransactionReason.TRANSFER);
+        targetTransaction.setReferenceNumber(referenceNumber);
+        targetTransaction.setVendors(vendorsRepository.findByVendorName("SATU"));
+        targetTransaction.setIsInternal(true);
+        targetTransaction.setNote(req.getNote());
 
         targetCardTransactions.add(targetTransaction);
 
         rekeningRepository.save(targetCard);
 
-        return "berhasil";
+        return transactionRepository.save(userTransaction);
     }
 }

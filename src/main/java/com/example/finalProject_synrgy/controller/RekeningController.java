@@ -2,6 +2,7 @@ package com.example.finalProject_synrgy.controller;
 
 import com.example.finalProject_synrgy.dto.base.BaseResponse;
 import com.example.finalProject_synrgy.dto.rekening.RekeningCheckRequest;
+import com.example.finalProject_synrgy.dto.rekening.RekeningCreateRequest;
 import com.example.finalProject_synrgy.dto.schemas.NullDataSchema;
 import com.example.finalProject_synrgy.dto.schemas.StringDataSchema;
 import com.example.finalProject_synrgy.service.RekeningService;
@@ -47,9 +48,9 @@ public class RekeningController {
         return ResponseEntity.ok(BaseResponse.success(rekeningService.checkIfRekeningExist(req), "Success checking card"));
     }
 
-    @Operation(summary = "Membuat kartu (hanya untuk debugging)")
+    @Operation(summary = "Membuat kartu (hanya untuk debugging)", description = "Jenis rekening (SAVER/PRIORITAS/EDU)")
     @PostMapping()
-    public ResponseEntity<?> create(@RequestBody RekeningCheckRequest req) {
+    public ResponseEntity<?> create(@RequestBody RekeningCreateRequest req) {
         return ResponseEntity.ok(BaseResponse.success(rekeningService.create(req), "Success Create Card"));
     }
 
@@ -57,5 +58,11 @@ public class RekeningController {
     @GetMapping()
     public ResponseEntity<?> read() {
         return ResponseEntity.ok(BaseResponse.success(rekeningService.read(), "Success Read Card"));
+    }
+
+    @Operation(summary = "Lihat informasi rekening")
+    @GetMapping("{rekeningNumber}")
+    public ResponseEntity<?> getCardName(@PathVariable Long rekeningNumber) {
+        return ResponseEntity.ok(BaseResponse.success(rekeningService.readOne(rekeningNumber), "Success Read Card"));
     }
 }
