@@ -1,13 +1,19 @@
 package com.example.finalProject_synrgy.service.impl;
 
 import com.example.finalProject_synrgy.dto.mutasi.MutasiResponse;
+import com.example.finalProject_synrgy.entity.Rekening;
+import com.example.finalProject_synrgy.entity.Transaction;
 import com.example.finalProject_synrgy.entity.enums.JenisTransaksi;
 import com.example.finalProject_synrgy.repository.RekeningRepository;
 import com.example.finalProject_synrgy.repository.TransactionRepository;
 import com.example.finalProject_synrgy.service.MutasiService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -43,19 +49,60 @@ public class MutasiServiceImpl implements MutasiService {
 
     @Override
     public List<MutasiResponse> getMutasi(Long cardNumber, int month, int year, JenisTransaksi jenisTransaksi, String periodeMutasi) {
-        if (!rekeningRepository.existsByCardNumber(cardNumber)) {
+        Rekening rekening = rekeningRepository.findByCardNumber(cardNumber);
+
+        if (rekening == null) {
             throw new IllegalArgumentException("Card number not found in the database.");
         }
 
-        String jenisTransaksiStr = jenisTransaksi.name();
-        List<MutasiResponse> mutasiResponses = transactionRepository.findMutasi(cardNumber, month, year, jenisTransaksiStr, periodeMutasi);
+        LocalDateTime startDate = LocalDate.of(year, month, 1).atStartOfDay();
+        LocalDateTime endDate = LocalDate.of(year, month, YearMonth.of(year, month).lengthOfMonth()).atTime(LocalTime.MAX);
 
-        for (MutasiResponse response : mutasiResponses) {
-            response.setPeriodeMutasi(periodeMutasi);
+        Date startDateConverted = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+        Date endDateConverted = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+
+        List<Transaction> transactions;
+        if (jenisTransaksi == JenisTransaksi.SEMUA) {
+            transactions = transactionRepository.findByRekeningAndCreated_dateBetween(
+                    rekening, startDateConverted, endDateConverted, Sort.by(Sort.Direction.DESC, "created_date"));
+        } else {
+            transactions = transactionRepository.findByRekeningAndCreated_dateBetweenAndJenisTransaksi(
+                    rekening, startDateConverted, endDateConverted, jenisTransaksi, Sort.by(Sort.Direction.DESC, "created_date"));
+        }
+
+        Integer saldoAwal = rekening.getBalance();
+        List<MutasiResponse> mutasiResponses = new ArrayList<>();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+
+        for (Transaction transaction : transactions) {
+            MutasiResponse response = new MutasiResponse(
+                    rekening.getUser().getUsername(),
+                    cardNumber,
+                    rekening.getJenisRekening(),
+                    periodeMutasi,
+                    saldoAwal,
+                    dateFormat.format(transaction.getCreated_date()),
+                    transaction.getAmount(),
+                    transaction.getReferenceNumber(),
+                    transaction.getNote(),
+                    transaction.getVendors() != null ? transaction.getVendors().getVendorCode() : null,
+                    transaction.getVendors() != null ? transaction.getVendors().getVendorName() : null
+            );
+
+            if (transaction.getJenisTransaksi() == JenisTransaksi.TRANSAKSI_MASUK) {
+                saldoAwal -= transaction.getAmount();
+            } else if (transaction.getJenisTransaksi() == JenisTransaksi.TRANSAKSI_KELUAR) {
+                saldoAwal += transaction.getAmount();
+            }
+
+            mutasiResponses.add(response);
         }
 
         return mutasiResponses;
     }
+
+
 
     @Override
     public int convertMonthNameToNumber(String monthName) {
