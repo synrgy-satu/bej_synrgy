@@ -165,7 +165,8 @@ public class DatabaseSeeder implements ApplicationRunner {
     public void insertVendors() {
         String[] vendorNames = {
                 "SATU",
-                "BCA"
+                "BCA",
+                "QRIS"
         };
         for (String vendorName : vendorNames) {
             Vendors vendor = vendorsRepository.findByVendorName(vendorName);
