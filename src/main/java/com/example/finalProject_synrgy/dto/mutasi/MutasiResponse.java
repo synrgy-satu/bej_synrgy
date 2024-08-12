@@ -17,11 +17,14 @@ public class MutasiResponse {
     private Integer balance;
     private String createdDate;
     private Integer amount;
+    private String referenceNumber;
+    private String note;
     private String vendorCode;
     private String vendorName;
 
+
     public MutasiResponse(String username, Long cardNumber, JenisRekening jenisRekening, String periodeMutasi,
-                          Integer balance, String createdDate, Integer amount, String vendorCode, String vendorName) {
+                          Integer balance, String createdDate, Integer amount, String referenceNumber, String note, String vendorCode, String vendorName) {
         this.username = username;
         this.cardNumber = cardNumber;
         this.jenisRekening = jenisRekening;
@@ -29,6 +32,8 @@ public class MutasiResponse {
         this.balance = balance;
         this.createdDate = createdDate;
         this.amount = amount;
+        this.referenceNumber = referenceNumber;
+        this.note = note;
         this.vendorCode = vendorCode;
         this.vendorName = vendorName;
     }
