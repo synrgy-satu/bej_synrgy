@@ -55,7 +55,9 @@ public class MutasiController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(BaseResponse.failure(400, e.getMessage()));
         } catch (Exception e) {
+//            System.err.println("Error fetching transaction data: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponse.failure(500, "Failed to fetch transaction data"));
         }
     }
+
 }
