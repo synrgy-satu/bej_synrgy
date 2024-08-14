@@ -94,10 +94,6 @@ public class AuthServiceImpl implements AuthService {
 
         String[] roleNames = {"ROLE_USER", "ROLE_READ", "ROLE_WRITE"};
 
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username already exist");
-        }
-
         if (userRepository.existsByEmailAddress(request.getEmailAddress())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exist");
         }
@@ -111,8 +107,17 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phone number already exist");
         }
 
+        String baseUsername = rekening.getName().toLowerCase().replace(" ", "_");
+        Random random = new Random();
+        String tempUsername;
+        if(userRepository.existsByUsername(baseUsername)) do {
+             tempUsername = baseUsername + "_" + random.nextInt(99);
+        } while (userRepository.existsByUsername(tempUsername));
+        else tempUsername = baseUsername;
+
         User user = new User();
-        user.setUsername(request.getUsername().toLowerCase());
+        user.setUsername(tempUsername);
+        user.setFullName(rekening.getName());
         user.setEmailAddress(request.getEmailAddress());
 
         rekening.setUser(user);
@@ -270,6 +275,22 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User Not Found");
         }
+    }
+
+    @Override
+    public Object checkEmail(String email) {
+        User user = userRepository.findByEmailAddress(email);
+        if(user == null) return "Email not used";
+        if(!user.isEnabled()) return "Email used but not validated";
+        return "Email used";
+    }
+
+    @Override
+    public Object checkPhoneNumber(String phoneNumber) {
+        User user = userRepository.findByPhoneNumber(phoneNumber);
+        if(user == null) return "Phone number not used";
+        if(!user.isEnabled()) return "Phone number used but not validated";
+        return "Phone number used";
     }
 
 //    @Override
