@@ -54,6 +54,12 @@ public class RekeningController {
         return ResponseEntity.ok(BaseResponse.success(rekeningService.create(req), "Success Create Card"));
     }
 
+    @Operation(summary = "Membuat kartu random (hanya untuk debugging)", description = "Jenis rekening (SAVER/PRIORITAS/EDU)")
+    @PostMapping("random")
+    public ResponseEntity<?> createRandom() {
+        return ResponseEntity.ok(BaseResponse.success(rekeningService.createRandom(), "Success Create Card"));
+    }
+
     @Operation(summary = "Lihat kartu terdaftar (hanya untuk debugging)")
     @GetMapping()
     public ResponseEntity<?> read() {

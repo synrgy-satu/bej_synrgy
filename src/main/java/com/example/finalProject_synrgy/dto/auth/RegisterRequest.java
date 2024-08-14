@@ -13,8 +13,8 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RegisterRequest {
-    @NotEmpty(message = "must not empty")
-    private String username;
+//    @NotEmpty(message = "must not empty")
+//    private String username;
 
     @NotEmpty(message = "must not empty")
     @Email
@@ -23,14 +23,14 @@ public class RegisterRequest {
     @NotEmpty(message = "must not empty")
     private String password;
 
-    @Range(min = 1000000000000000L, max = 9999999999999999L, message = "must in valid range (1000000000000000 - 9999999999999999) (16 digit)")
+    @Range(min = 1000000000000000L, max = 9999999999999999L, message = "must in valid range (1000000000000000 - 9999999999999999) (16 digits)")
     private Long cardNumber;
 
     @NotEmpty(message = "must not empty")
-    @Size(min = 13, max = 13, message = "must be 13 number")
+    @Size(min = 11, max = 13, message = "must between 11 - 13 digits")
     private String phoneNumber;
 
     @NotEmpty(message = "must not empty")
-    @Size(min = 6, max = 6, message = "must be 6 number")
+    @Size(min = 6, max = 6, message = "must be 6 digits")
     private String pin;
 }
