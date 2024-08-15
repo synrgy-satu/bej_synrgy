@@ -70,7 +70,6 @@ public class MutasiServiceImpl implements MutasiService {
                     rekening, startDateConverted, endDateConverted, jenisTransaksi, Sort.by(Sort.Direction.DESC, "created_date"));
         }
 
-        Integer saldoAwal = rekening.getBalance();
         List<MutasiResponse> mutasiResponses = new ArrayList<>();
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
@@ -81,20 +80,15 @@ public class MutasiServiceImpl implements MutasiService {
                     cardNumber,
                     rekening.getJenisRekening(),
                     periodeMutasi,
-                    saldoAwal,
+                    transaction.getBalanceHistory(),
                     dateFormat.format(transaction.getCreated_date()),
                     transaction.getAmount(),
                     transaction.getReferenceNumber(),
                     transaction.getNote(),
                     transaction.getVendors() != null ? transaction.getVendors().getVendorCode() : null,
-                    transaction.getVendors() != null ? transaction.getVendors().getVendorName() : null
+                    transaction.getVendors() != null ? transaction.getVendors().getVendorName() : null,
+                    transaction.getJenisTransaksi()
             );
-
-            if (transaction.getJenisTransaksi() == JenisTransaksi.TRANSAKSI_MASUK) {
-                saldoAwal -= transaction.getAmount();
-            } else if (transaction.getJenisTransaksi() == JenisTransaksi.TRANSAKSI_KELUAR) {
-                saldoAwal += transaction.getAmount();
-            }
 
             mutasiResponses.add(response);
         }

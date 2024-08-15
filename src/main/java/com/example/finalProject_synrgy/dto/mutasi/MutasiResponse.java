@@ -1,6 +1,7 @@
 package com.example.finalProject_synrgy.dto.mutasi;
 
 import com.example.finalProject_synrgy.entity.enums.JenisRekening;
+import com.example.finalProject_synrgy.entity.enums.JenisTransaksi;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -21,10 +22,11 @@ public class MutasiResponse {
     private String note;
     private String vendorCode;
     private String vendorName;
+    private JenisTransaksi jenisTransaksi;
 
 
     public MutasiResponse(String username, Long cardNumber, JenisRekening jenisRekening, String periodeMutasi,
-                          Integer balance, String createdDate, Integer amount, String referenceNumber, String note, String vendorCode, String vendorName) {
+                          Integer balance, String createdDate, Integer amount, String referenceNumber, String note, String vendorCode, String vendorName, JenisTransaksi jenisTransaksi) {
         this.username = username;
         this.cardNumber = cardNumber;
         this.jenisRekening = jenisRekening;
@@ -36,6 +38,7 @@ public class MutasiResponse {
         this.note = note;
         this.vendorCode = vendorCode;
         this.vendorName = vendorName;
+        this.jenisTransaksi = jenisTransaksi;
     }
 
     public void setPeriodeMutasi(String periodeMutasi) {
