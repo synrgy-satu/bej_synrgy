@@ -29,6 +29,8 @@ public class Transaction extends BaseDate {
 
     private Integer amount;
 
+    private Integer balanceHistory;
+
     @Enumerated(EnumType.STRING)
     private JenisTransaksi jenisTransaksi;
 

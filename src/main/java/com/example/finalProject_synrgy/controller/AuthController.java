@@ -10,10 +10,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import com.example.finalProject_synrgy.dto.auth.*;
 import com.example.finalProject_synrgy.dto.base.BaseResponse;
 import com.example.finalProject_synrgy.service.AuthService;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
 import java.security.Principal;
 
 @Tag(name = "Auth")
@@ -185,5 +190,20 @@ public class AuthController {
     @GetMapping
     public ResponseEntity<?> getCurrentUser(Principal principal) {
         return ResponseEntity.ok(BaseResponse.success(authService.getCurrentUser(principal), "Success Get Current User Login"));
+    }
+
+    @GetMapping("checkEmail/{email}")
+    public ResponseEntity<?> checkEmail(@PathVariable @NotBlank @Email String email) {
+        return ResponseEntity.ok(BaseResponse.success(authService.checkEmail(email), "Succes get email information"));
+    }
+
+    @GetMapping("checkPhoneNumber/{phoneNumber}")
+    public ResponseEntity<?> checkPhoneNumber(
+            @PathVariable
+            @NotEmpty(message = "must not empty")
+            @Size(min = 11, max = 13, message = "must between 11 - 13 digits")
+            String phoneNumber
+    ) {
+        return ResponseEntity.ok(BaseResponse.success(authService.checkPhoneNumber(phoneNumber), "Succes get phone information"));
     }
 }

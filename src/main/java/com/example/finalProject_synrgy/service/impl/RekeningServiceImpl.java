@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Calendar;
 import java.util.Random;
 
 @Service
@@ -48,10 +49,69 @@ public class RekeningServiceImpl implements RekeningService {
             generatedRekNum = 1111111100L + 1 + random.nextInt(99);
         } while (rekeningRepository.existsByRekeningNumber(generatedRekNum));
         rekening.setRekeningNumber(generatedRekNum);
-        rekening.setExpiredDateMonth(req.getMonth());
+        rekening.setName(req.getName().trim().replaceAll("[0-9]", "").toUpperCase());
+
+        if(req.getYear() <= Calendar.getInstance().get(Calendar.YEAR)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please put a future year");
         rekening.setExpiredDateYear(req.getYear());
+        rekening.setExpiredDateMonth(req.getMonth());
+
         rekening.setJenisRekening(req.getJenisRekening());
         rekening.setBalance(req.getBalance());
+
+        return rekeningRepository.save(rekening);
+    }
+
+    public Rekening createRandom() {
+        Rekening rekening = new Rekening();
+
+        Random random = new Random();
+
+        Long generatedCardNum;
+        do {
+            generatedCardNum = 4444444444440000L + random.nextInt(9999);
+        } while (rekeningRepository.existsByRekeningNumber(generatedCardNum));
+        rekening.setCardNumber(generatedCardNum);
+
+        Long generatedRekNum;
+        do {
+            generatedRekNum = 4444444400L + random.nextInt(99);
+        } while (rekeningRepository.existsByRekeningNumber(generatedRekNum));
+        rekening.setRekeningNumber(generatedRekNum);
+
+        String[] firstName = {
+                "Arif",
+                "Budi",
+                "Dian",
+                "Eko",
+                "Fajar",
+                "Gita",
+                "Hadi",
+                "Indra",
+                "Joko",
+                "Lestari"
+        };
+
+        String[] lastName = {
+                "Pratama",
+                "Wibowo",
+                "Setiawan",
+                "Nugroho",
+                "Putri",
+                "Sari",
+                "Santoso",
+                "Susanto",
+                "Yulianto",
+                "Wijaya"
+        };
+
+        String generatedName = firstName[random.nextInt(10)] + " " + lastName[random.nextInt(10)];
+        rekening.setName(generatedName.trim().replaceAll("[0-9]", "").toUpperCase());
+
+        rekening.setExpiredDateYear(Calendar.getInstance().get(Calendar.YEAR) + 1 + random.nextInt(5));
+        rekening.setExpiredDateMonth(1 + random.nextInt(12));
+
+        rekening.setJenisRekening(JenisRekening.values()[random.nextInt(JenisRekening.values().length)]);
+        rekening.setBalance(random.nextInt(11) * 100000);
 
         return rekeningRepository.save(rekening);
     }

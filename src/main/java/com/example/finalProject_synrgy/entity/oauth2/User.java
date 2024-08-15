@@ -30,6 +30,9 @@ public class User extends BaseDate implements UserDetails {
     @Column(name = "username")
     private String username;
 
+    @Column(name = "full_name")
+    private String fullName;
+
     @Column(name = "email_address")
     private String emailAddress;
 

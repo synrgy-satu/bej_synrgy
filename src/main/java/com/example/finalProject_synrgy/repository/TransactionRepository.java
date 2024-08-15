@@ -25,8 +25,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
     @Query("SELECT new com.example.finalProject_synrgy.dto.mutasi.MutasiResponse(" +
             "u.username, r.cardNumber, r.jenisRekening, " +
             "CONCAT(FUNCTION('TO_CHAR', t.created_date, 'MM-YYYY'), ' ', :periodeMutasi), " +
-            "r.balance, FUNCTION('TO_CHAR', t.created_date, 'DD-MM-YYYY'), " +
-            "t.amount, t.referenceNumber, t.note, v.vendorCode, v.vendorName) " +
+            "t.balanceHistory, FUNCTION('TO_CHAR', t.created_date, 'DD-MM-YYYY'), " +
+            "t.amount, t.referenceNumber, t.note, v.vendorCode, v.vendorName, t.jenisTransaksi) " +
             "FROM Transaction t " +
             "JOIN t.rekening r " +
             "JOIN r.user u " +

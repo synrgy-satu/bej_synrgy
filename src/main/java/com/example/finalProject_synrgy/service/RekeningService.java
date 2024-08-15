@@ -12,4 +12,6 @@ public interface RekeningService {
     Object read();
 
     Object readOne(Long rekeningNumber);
+
+    public Rekening createRandom();
 }

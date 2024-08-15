@@ -68,8 +68,11 @@ public class ActionServiceImpl implements ActionService {
 
         String referenceNumber = UUID.randomUUID().toString();
 
+        int userFinalBalance = userCard.getBalance() - req.getAmount();
 
-        userCard.setBalance(userCard.getBalance() - req.getAmount());
+        if(userFinalBalance < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enough balance on card");
+
+        userCard.setBalance(userFinalBalance);
 
         List<Transaction> userCardTransactions = userCard.getTransactions();
 
@@ -85,13 +88,16 @@ public class ActionServiceImpl implements ActionService {
         userTransaction.setReferenceNumber(referenceNumber);
         userTransaction.setVendors(vendorsRepository.findByVendorName("SATU"));
         userTransaction.setIsInternal(true);
+        userTransaction.setBalanceHistory(userFinalBalance);
         userTransaction.setNote(req.getNote());
 
         userCardTransactions.add(userTransaction);
 
         rekeningRepository.save(userCard);
 
-        targetCard.setBalance(targetCard.getBalance() + req.getAmount());
+        int targetFinalBalance = targetCard.getBalance() + req.getAmount();
+
+        targetCard.setBalance(targetFinalBalance);
 
         List<Transaction> targetCardTransactions = targetCard.getTransactions();
 
@@ -107,6 +113,7 @@ public class ActionServiceImpl implements ActionService {
         targetTransaction.setReferenceNumber(referenceNumber);
         targetTransaction.setVendors(vendorsRepository.findByVendorName("SATU"));
         targetTransaction.setIsInternal(true);
+        targetTransaction.setBalanceHistory(targetFinalBalance);
         targetTransaction.setNote(req.getNote());
 
         targetCardTransactions.add(targetTransaction);
