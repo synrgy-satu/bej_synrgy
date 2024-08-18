@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class MutasiServiceImpl implements MutasiService {
@@ -24,28 +26,6 @@ public class MutasiServiceImpl implements MutasiService {
 
     @Autowired
     private RekeningRepository rekeningRepository;
-
-//    @Override
-//    public List<MutasiResponse> read(String cardNumber, LocalDate startDate, LocalDate endDate, String timePeriod, JenisTransaksi transactionType) {
-//        if (timePeriod != null) {
-//            switch (timePeriod) {
-//                case "today":
-//                    startDate = LocalDate.now();
-//                    endDate = LocalDate.now();
-//                    break;
-//                case "last7days":
-//                    startDate = LocalDate.now().minusDays(7);
-//                    endDate = LocalDate.now();
-//                    break;
-//                case "last30days":
-//                    startDate = LocalDate.now().minusDays(30);
-//                    endDate = LocalDate.now();
-//                    break;
-//            }
-//        }
-//
-//        return mutasiRepository.findByCriteria(cardNumber, startDate, endDate, transactionType);
-//    }
 
     @Override
     public List<MutasiResponse> getMutasi(Long cardNumber, int month, int year, JenisTransaksi jenisTransaksi, String periodeMutasi) {
@@ -133,4 +113,74 @@ public class MutasiServiceImpl implements MutasiService {
 
         return new int[]{month, year};
     }
+
+    @Override
+    public List<MutasiResponse> getMutasiHariIni(Long cardNumber, JenisTransaksi jenisTransaksi) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDateTime.now();
+        return getMutasiMobile(cardNumber, startOfDay, endOfDay, jenisTransaksi);
+    }
+
+    @Override
+    public List<MutasiResponse> getMutasiTujuhHariTerakhir(Long cardNumber, JenisTransaksi jenisTransaksi) {
+        LocalDateTime tujuhHariLalu = LocalDateTime.now().minusDays(7);
+        LocalDateTime now = LocalDateTime.now();
+        return getMutasiMobile(cardNumber, tujuhHariLalu, now, jenisTransaksi);
+    }
+
+    @Override
+    public List<MutasiResponse> getMutasiByTanggal(Long cardNumber, String tanggalMulai, String tanggalSelesai, JenisTransaksi jenisTransaksi) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        LocalDateTime startDate = LocalDate.parse(tanggalMulai, formatter).atStartOfDay();
+        LocalDateTime endDate = LocalDate.parse(tanggalSelesai, formatter).atTime(LocalTime.MAX);
+
+        if (ChronoUnit.DAYS.between(startDate, endDate) > 90) {
+            throw new IllegalArgumentException("Date range should not exceed 90 days.");
+        }
+
+        return getMutasiMobile(cardNumber, startDate, endDate, jenisTransaksi);
+    }
+
+    @Override
+    public List<MutasiResponse> getMutasiMobile(Long cardNumber, LocalDateTime startDate, LocalDateTime endDate, JenisTransaksi jenisTransaksi) {
+        Rekening rekening = rekeningRepository.findByCardNumber(cardNumber);
+
+        if (rekening == null) {
+            throw new IllegalArgumentException("Card number not found in the database.");
+        }
+
+        Date startDateConverted = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+        Date endDateConverted = Date.from(endDate.atZone(ZoneId.systemDefault()).toInstant());
+
+        String periodeMutasi = startDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) + " to " + endDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+
+        List<Transaction> transactions;
+        if (jenisTransaksi == null || jenisTransaksi == JenisTransaksi.SEMUA) {
+            transactions = transactionRepository.findByRekeningAndCreated_dateBetween(
+                    rekening, startDateConverted, endDateConverted, Sort.by(Sort.Direction.DESC, "created_date"));
+        } else {
+            transactions = transactionRepository.findByRekeningAndCreated_dateBetweenAndJenisTransaksi(
+                    rekening, startDateConverted, endDateConverted, jenisTransaksi, Sort.by(Sort.Direction.DESC, "created_date"));
+        }
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+
+        return transactions.stream()
+                .map(transaction -> new MutasiResponse(
+                        rekening.getUser().getUsername(),
+                        cardNumber,
+                        rekening.getJenisRekening(),
+                        periodeMutasi,
+                        transaction.getBalanceHistory(),
+                        dateFormat.format(transaction.getCreated_date()),
+                        transaction.getAmount(),
+                        transaction.getReferenceNumber(),
+                        transaction.getNote(),
+                        transaction.getVendors() != null ? transaction.getVendors().getVendorCode() : null,
+                        transaction.getVendors() != null ? transaction.getVendors().getVendorName() : null,
+                        transaction.getJenisTransaksi()
+                ))
+                .collect(Collectors.toList());
+    }
+
 }
