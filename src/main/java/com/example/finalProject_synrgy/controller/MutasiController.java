@@ -2,6 +2,7 @@ package com.example.finalProject_synrgy.controller;
 
 import com.example.finalProject_synrgy.dto.base.BaseResponse;
 import com.example.finalProject_synrgy.dto.mutasi.MutasiResponse;
+import com.example.finalProject_synrgy.dto.mutasi.SumberRekeningResponse;
 import com.example.finalProject_synrgy.entity.enums.JenisTransaksi;
 import com.example.finalProject_synrgy.service.MutasiService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -19,6 +22,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 @Tag(name = "Mutasi")
 @RestController
@@ -115,6 +119,46 @@ public class MutasiController {
             return ResponseEntity.badRequest().body(BaseResponse.failure(400, e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponse.failure(500, "Failed to fetch transaction data"));
+        }
+    }
+
+    @PostMapping("/pin")
+    public ResponseEntity<BaseResponse<String>> verifyPin(@RequestParam("pin") String pin, Principal principal) {
+        try {
+            String result = mutasiService.verifyPin(pin, principal);
+            return ResponseEntity.ok(BaseResponse.success(result, "Verifikasi PIN Berhasil"));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatus()).body(BaseResponse.failure(e.getStatus().value(), e.getReason()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponse.failure(500, "Terjadi kesalahan saat verifikasi PIN."));
+        }
+    }
+
+    @Operation(summary = "Lihat Data Mutasi Rekening Berdasarkan ID")
+    @GetMapping("/mobile/{transactionId}")
+    public ResponseEntity<BaseResponse<MutasiResponse>> getMutasiMobileById(
+            @PathVariable("transactionId") UUID transactionId) {
+        try {
+            MutasiResponse mutasiResponse = mutasiService.getMutasiMobileById(transactionId);
+
+            if (mutasiResponse == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(BaseResponse.failure(404, "Mutasi tidak ditemukan."));
+            }
+
+            return ResponseEntity.ok(BaseResponse.success(mutasiResponse, "Success Read Mutasi By ID"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponse.failure(500, "Failed to fetch transaction data by ID"));
+        }
+    }
+
+    @Operation(summary = "Lihat Data Sumber Rekening")
+    @GetMapping("/sumber-rekening")
+    public ResponseEntity<BaseResponse<List<SumberRekeningResponse>>> getSumberRekening(Principal principal) {
+        try {
+            List<SumberRekeningResponse> sumberRekening = mutasiService.getSumberRekening(principal);
+            return ResponseEntity.ok(BaseResponse.success(sumberRekening, "Data sumber rekening berhasil diambil."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(BaseResponse.failure(500, "Terjadi kesalahan saat mengambil data sumber rekening."));
         }
     }
 }

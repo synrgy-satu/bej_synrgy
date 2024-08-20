@@ -2,14 +2,11 @@ package com.example.finalProject_synrgy.dto.mutasi;
 
 import com.example.finalProject_synrgy.entity.enums.JenisRekening;
 import com.example.finalProject_synrgy.entity.enums.JenisTransaksi;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-
-import java.sql.Timestamp;
-import java.time.LocalDate;
-import java.util.Date;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class MutasiResponse {
     private String username;
     private Long cardNumber;

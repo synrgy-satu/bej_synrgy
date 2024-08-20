@@ -22,24 +22,24 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
 
     Transaction findByJenisTransaksi(Enum jenisTransaksi);
 
-    @Query("SELECT new com.example.finalProject_synrgy.dto.mutasi.MutasiResponse(" +
-            "u.username, r.cardNumber, r.jenisRekening, " +
-            "CONCAT(FUNCTION('TO_CHAR', t.created_date, 'MM-YYYY'), ' ', :periodeMutasi), " +
-            "t.balanceHistory, FUNCTION('TO_CHAR', t.created_date, 'DD-MM-YYYY'), " +
-            "t.amount, t.referenceNumber, t.note, v.vendorCode, v.vendorName, t.jenisTransaksi) " +
-            "FROM Transaction t " +
-            "JOIN t.rekening r " +
-            "JOIN r.user u " +
-            "LEFT JOIN t.vendors v " +
-            "WHERE r.cardNumber = :cardNumber " +
-            "AND EXTRACT(MONTH FROM t.created_date) = :month " +
-            "AND EXTRACT(YEAR FROM t.created_date) = :year " +
-            "AND (:jenisTransaksi = 'SEMUA' OR t.jenisTransaksi = :jenisTransaksi)")
-    List<MutasiResponse> findMutasi(@Param("cardNumber") Long cardNumber,
-                                    @Param("month") int month,
-                                    @Param("year") int year,
-                                    @Param("jenisTransaksi") String jenisTransaksi,
-                                    @Param("periodeMutasi") String periodeMutasi);
+//    @Query("SELECT new com.example.finalProject_synrgy.dto.mutasi.MutasiResponse(" +
+//            "u.username, r.cardNumber, r.jenisRekening, " +
+//            "CONCAT(FUNCTION('TO_CHAR', t.created_date, 'MM-YYYY'), ' ', :periodeMutasi), " +
+//            "t.balanceHistory, FUNCTION('TO_CHAR', t.created_date, 'DD-MM-YYYY'), " +
+//            "t.amount, t.referenceNumber, t.note, v.vendorCode, v.vendorName, t.jenisTransaksi) " +
+//            "FROM Transaction t " +
+//            "JOIN t.rekening r " +
+//            "JOIN r.user u " +
+//            "LEFT JOIN t.vendors v " +
+//            "WHERE r.cardNumber = :cardNumber " +
+//            "AND EXTRACT(MONTH FROM t.created_date) = :month " +
+//            "AND EXTRACT(YEAR FROM t.created_date) = :year " +
+//            "AND (:jenisTransaksi = 'SEMUA' OR t.jenisTransaksi = :jenisTransaksi)")
+//    List<MutasiResponse> findMutasi(@Param("cardNumber") Long cardNumber,
+//                                    @Param("month") int month,
+//                                    @Param("year") int year,
+//                                    @Param("jenisTransaksi") String jenisTransaksi,
+//                                    @Param("periodeMutasi") String periodeMutasi);
 
     @Query("SELECT t FROM Transaction t WHERE t.rekening = :rekening AND t.created_date BETWEEN :startDate AND :endDate")
     List<Transaction> findByRekeningAndCreated_dateBetween(
