@@ -1,16 +1,24 @@
 package com.example.finalProject_synrgy.service.impl;
 
 import com.example.finalProject_synrgy.dto.mutasi.MutasiResponse;
+import com.example.finalProject_synrgy.dto.mutasi.SumberRekeningResponse;
 import com.example.finalProject_synrgy.entity.Rekening;
 import com.example.finalProject_synrgy.entity.Transaction;
+import com.example.finalProject_synrgy.entity.Vendors;
 import com.example.finalProject_synrgy.entity.enums.JenisTransaksi;
+import com.example.finalProject_synrgy.entity.oauth2.User;
 import com.example.finalProject_synrgy.repository.RekeningRepository;
 import com.example.finalProject_synrgy.repository.TransactionRepository;
+import com.example.finalProject_synrgy.service.AuthService;
 import com.example.finalProject_synrgy.service.MutasiService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +27,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class MutasiServiceImpl implements MutasiService {
 
     @Autowired
@@ -26,6 +35,9 @@ public class MutasiServiceImpl implements MutasiService {
 
     @Autowired
     private RekeningRepository rekeningRepository;
+
+    @Autowired
+    private AuthService authService;
 
     @Override
     public List<MutasiResponse> getMutasi(Long cardNumber, int month, int year, JenisTransaksi jenisTransaksi, String periodeMutasi) {
@@ -183,4 +195,60 @@ public class MutasiServiceImpl implements MutasiService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public String verifyPin(String pin, Principal principal) {
+        User currentUser = authService.getCurrentUser(principal);
+
+        if (currentUser.getPin() == null || !currentUser.getPin().equals(pin)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "PIN tidak valid.");
+        }
+
+        return "Verifikasi PIN berhasil.";
+    }
+
+    @Override
+    public MutasiResponse getMutasiMobileById(UUID transactionId) {
+        Optional<Transaction> transactionOptional = transactionRepository.findById(transactionId);
+
+        if (!transactionOptional.isPresent()) {
+            return null;
+        }
+
+        Transaction transaction = transactionOptional.get();
+
+        Rekening rekening = transaction.getRekening();
+        Vendors vendor = transaction.getVendors();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+
+        MutasiResponse mutasiResponse = new MutasiResponse();
+        mutasiResponse.setUsername(rekening.getUser().getUsername());
+        mutasiResponse.setCardNumber(rekening.getCardNumber());
+        mutasiResponse.setJenisRekening(rekening.getJenisRekening());
+        mutasiResponse.setPeriodeMutasi("");
+        mutasiResponse.setBalance(transaction.getBalanceHistory());
+        mutasiResponse.setCreatedDate(dateFormat.format(transaction.getCreated_date()));
+        mutasiResponse.setAmount(transaction.getAmount());
+        mutasiResponse.setReferenceNumber(transaction.getReferenceNumber());
+        mutasiResponse.setNote(transaction.getNote());
+        mutasiResponse.setVendorCode(vendor != null ? vendor.getVendorCode() : null);
+        mutasiResponse.setVendorName(vendor != null ? vendor.getVendorName() : null);
+        mutasiResponse.setJenisTransaksi(transaction.getJenisTransaksi());
+
+        return mutasiResponse;
+    }
+
+    @Override
+    public List<SumberRekeningResponse> getSumberRekening(Principal principal) {
+        User currentUser = authService.getCurrentUser(principal);
+        List<Rekening> rekeningList = rekeningRepository.findByUserId(currentUser.getId());
+
+        return rekeningList.stream()
+                .map(rekening -> new SumberRekeningResponse(
+                        currentUser.getFullName(),
+                        rekening.getCardNumber(),
+                        rekening.getJenisRekening()
+                ))
+                .collect(Collectors.toList());
+    }
 }
