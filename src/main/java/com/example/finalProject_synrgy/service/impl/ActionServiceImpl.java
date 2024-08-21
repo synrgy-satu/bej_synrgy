@@ -133,7 +133,8 @@ public class ActionServiceImpl implements ActionService {
         rekeningRepository.save(userCard);
         rekeningRepository.save(targetCard);
 
-        entityManager.flush(); // Pastikan semua perubahan tersimpan ke database
+        // memastikan semua perubahan tersimpan ke database
+        entityManager.flush();
 
         notificationService.saveNotification("Transfer Berhasil",
                 "Transfer kepada " + targetCard.getUser().getFullName() + " senilai " + req.getAmount() + " berhasil",
@@ -143,7 +144,7 @@ public class ActionServiceImpl implements ActionService {
                 "Transfer dari " + user.getFullName() + " senilai " + req.getAmount() + " berhasil",
                 targetCard.getUser().getUsername());
 
-        return userTransaction; // Kembalikan transaksi user sebagai respons
+        return userTransaction;
     }
 
 
