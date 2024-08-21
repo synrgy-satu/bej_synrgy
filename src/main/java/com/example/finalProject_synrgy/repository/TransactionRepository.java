@@ -56,4 +56,5 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID>,
             @Param("jenisTransaksi") JenisTransaksi jenisTransaksi,
             Sort sort);
 
+//    Rekening findOneByU(UUID userId);
 }
