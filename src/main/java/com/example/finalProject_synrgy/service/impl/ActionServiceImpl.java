@@ -20,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import java.security.Principal;
 import java.util.*;
@@ -42,6 +44,9 @@ public class ActionServiceImpl implements ActionService {
 
     @Autowired
     TransactionRepository transactionRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     QrisRepository qrisRepository;
@@ -70,32 +75,32 @@ public class ActionServiceImpl implements ActionService {
         validationService.validate(req);
 
         Rekening userCard = rekeningRepository.findByRekeningNumber(req.getDebitedRekeningNumber());
-        if(userCard == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Debited rekening doesn't exist");
+        if (userCard == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Debited rekening doesn't exist");
 
         Rekening targetCard = rekeningRepository.findByRekeningNumber(req.getTargetRekeningNumber());
-        if(targetCard == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Target rekening doesn't exist");
-        if(targetCard.getUser() == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Target is not Satu user");
+        if (targetCard == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Target rekening doesn't exist");
+        if (targetCard.getUser() == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Target is not Satu user");
 
         User user = userRepository.findByUsername(principal.getName());
-        if(!user.getRekenings().contains(userCard)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Debited rekening is not belong to authenticated user");
+        if (!user.getRekenings().contains(userCard))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Debited rekening is not belong to authenticated user");
 
-        if(!Objects.equals(req.getPin(), user.getPin())) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong Pin");
-
+        if (!Objects.equals(req.getPin(), user.getPin()))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong Pin");
 
         String referenceNumber = UUID.randomUUID().toString();
 
         int userFinalBalance = userCard.getBalance() - req.getAmount();
-
-        if(userFinalBalance < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enough balance on card");
+        if (userFinalBalance < 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enough balance on card");
 
         userCard.setBalance(userFinalBalance);
 
-        List<Transaction> userCardTransactions = userCard.getTransactions();
+        int targetFinalBalance = targetCard.getBalance() + req.getAmount();
+        targetCard.setBalance(targetFinalBalance);
 
-        if(userCardTransactions == null) userCardTransactions = new ArrayList<>();
-
+        // Transaksi untuk rekening pengirim (userCard)
         Transaction userTransaction = new Transaction();
-
         userTransaction.setAmount(req.getAmount());
         userTransaction.setRekening(userCard);
         userTransaction.setIsDebited(true);
@@ -107,20 +112,8 @@ public class ActionServiceImpl implements ActionService {
         userTransaction.setBalanceHistory(userFinalBalance);
         userTransaction.setNote(req.getNote());
 
-        userCardTransactions.add(userTransaction);
-
-        rekeningRepository.save(userCard);
-
-        int targetFinalBalance = targetCard.getBalance() + req.getAmount();
-
-        targetCard.setBalance(targetFinalBalance);
-
-        List<Transaction> targetCardTransactions = targetCard.getTransactions();
-
-        if(targetCardTransactions == null) targetCardTransactions = new ArrayList<>();
-
+        // Transaksi untuk rekening penerima (targetCard)
         Transaction targetTransaction = new Transaction();
-
         targetTransaction.setAmount(req.getAmount());
         targetTransaction.setRekening(targetCard);
         targetTransaction.setIsDebited(false);
@@ -132,9 +125,15 @@ public class ActionServiceImpl implements ActionService {
         targetTransaction.setBalanceHistory(targetFinalBalance);
         targetTransaction.setNote(req.getNote());
 
-        targetCardTransactions.add(targetTransaction);
+        // Simpan kedua transaksi sekaligus
+        transactionRepository.save(userTransaction);
+        transactionRepository.save(targetTransaction);
 
+        // Simpan rekening setelah perubahan balance dan transaksi
+        rekeningRepository.save(userCard);
         rekeningRepository.save(targetCard);
+
+        entityManager.flush(); // Pastikan semua perubahan tersimpan ke database
 
         notificationService.saveNotification("Transfer Berhasil",
                 "Transfer kepada " + targetCard.getUser().getFullName() + " senilai " + req.getAmount() + " berhasil",
@@ -144,8 +143,9 @@ public class ActionServiceImpl implements ActionService {
                 "Transfer dari " + user.getFullName() + " senilai " + req.getAmount() + " berhasil",
                 targetCard.getUser().getUsername());
 
-        return transactionRepository.save(userTransaction);
+        return userTransaction; // Kembalikan transaksi user sebagai respons
     }
+
 
     @Transactional
     public Object addCard(Principal principal, AddCardReq req) {
