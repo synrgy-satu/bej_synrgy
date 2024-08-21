@@ -1,8 +1,9 @@
 package com.example.finalProject_synrgy.service.impl;
 
+import com.example.finalProject_synrgy.dto.action.AddCardReq;
+import com.example.finalProject_synrgy.dto.action.BalanceTotalRes;
 import com.example.finalProject_synrgy.dto.action.PayQrisReq;
 import com.example.finalProject_synrgy.dto.action.TransferReq;
-import com.example.finalProject_synrgy.dto.infosaldo.InfoSaldoResponse;
 import com.example.finalProject_synrgy.entity.Qris;
 import com.example.finalProject_synrgy.entity.Rekening;
 import com.example.finalProject_synrgy.entity.Transaction;
@@ -11,6 +12,7 @@ import com.example.finalProject_synrgy.entity.enums.TransactionReason;
 import com.example.finalProject_synrgy.entity.oauth2.User;
 import com.example.finalProject_synrgy.repository.*;
 import com.example.finalProject_synrgy.service.ActionService;
+import com.example.finalProject_synrgy.service.NotificationService;
 import com.example.finalProject_synrgy.service.ValidationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +23,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -46,8 +46,23 @@ public class ActionServiceImpl implements ActionService {
     @Autowired
     QrisRepository qrisRepository;
 
+    @Autowired
+    NotificationService notificationService;
+
     public Object getInfoSaldo(Principal principal) {
         return rekeningRepository.findAllByUser(userRepository.findByUsername(principal.getName()));
+    }
+
+    public Object getInfoSaldoTotal(Principal principal) {
+        List<Rekening> rekenings = rekeningRepository.findAllByUser(userRepository.findByUsername(principal.getName()));
+        BalanceTotalRes res = new BalanceTotalRes();
+        rekenings.forEach((rekening -> {
+            res.setBalanceTotal(res.getBalanceTotal() + rekening.getBalance());
+        }));
+        res.setCardTotal(rekenings.size());
+        res.setName(rekenings.get(0).getName());
+
+        return res;
     }
 
     @Transactional
@@ -59,6 +74,7 @@ public class ActionServiceImpl implements ActionService {
 
         Rekening targetCard = rekeningRepository.findByRekeningNumber(req.getTargetRekeningNumber());
         if(targetCard == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Target rekening doesn't exist");
+        if(targetCard.getUser() == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Target is not Satu user");
 
         User user = userRepository.findByUsername(principal.getName());
         if(!user.getRekenings().contains(userCard)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Debited rekening is not belong to authenticated user");
@@ -120,7 +136,35 @@ public class ActionServiceImpl implements ActionService {
 
         rekeningRepository.save(targetCard);
 
+        notificationService.saveNotification("Transfer Berhasil",
+                "Transfer kepada " + targetCard.getUser().getFullName() + " senilai " + req.getAmount() + " berhasil",
+                user.getUsername());
+
+        notificationService.saveNotification("Transfer Berhasil",
+                "Transfer dari " + user.getFullName() + " senilai " + req.getAmount() + " berhasil",
+                targetCard.getUser().getUsername());
+
         return transactionRepository.save(userTransaction);
+    }
+
+    @Transactional
+    public Object addCard(Principal principal, AddCardReq req) {
+        validationService.validate(req);
+
+        Rekening rekening = rekeningRepository.findByCardNumber(req.getCardNumber());
+
+        if(rekening == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found");
+
+        if(rekening.getExpiredDateYear() != req.getYear() || rekening.getExpiredDateMonth() != req.getMonth())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Month and year don't match");
+
+        User user = userRepository.findByUsername(principal.getName());
+
+        rekening.setUser(user);
+
+        user.getRekenings().add(rekening);
+
+        return userRepository.save(user);
     }
 
     @Transactional
