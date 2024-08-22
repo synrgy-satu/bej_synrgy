@@ -68,7 +68,7 @@ public class QrisServiceImpl implements QrisService {
             bitMatrix = qrCodeWriter.encode(qris.getEncodedQrCode(),
                     BarcodeFormat.QR_CODE, 300, 300);
             MatrixToImageWriter.writeToPath(bitMatrix, "png",
-                    Paths.get((SystemUtils.IS_OS_LINUX ? "~/static" : ".")+"/qris/"+qris.getEncodedQrCode()+".png"));
+                    Paths.get((SystemUtils.IS_OS_LINUX ? qrisFolder : "./data")+"/"+qris.getEncodedQrCode()+".png"));
         } catch (Throwable t) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, t.getMessage());
         }
