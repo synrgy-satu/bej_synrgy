@@ -29,4 +29,4 @@ jobs:
             sudo docker rm --force ${{ secrets.REPO_NAME }}
             sudo docker rmi --force ${{ secrets.REPO_NAME }}
             sudo docker build -t ${{ secrets.REPO_NAME }} .
-            sudo docker run -d --name ${{ secrets.REPO_NAME }} -p 8080:8080 ${{ secrets.REPO_NAME }}
+            sudo docker run -d --name ${{ secrets.REPO_NAME }} -p 8080:8080 ${{ secrets.REPO_NAME }} --mount source=data1,target=/data

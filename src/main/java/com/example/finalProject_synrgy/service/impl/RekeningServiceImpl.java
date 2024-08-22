@@ -3,9 +3,11 @@ package com.example.finalProject_synrgy.service.impl;
 import com.example.finalProject_synrgy.dto.rekening.BriefInformationResponse;
 import com.example.finalProject_synrgy.dto.rekening.RekeningCheckRequest;
 import com.example.finalProject_synrgy.dto.rekening.RekeningCreateRequest;
+import com.example.finalProject_synrgy.entity.Qris;
 import com.example.finalProject_synrgy.entity.Rekening;
 import com.example.finalProject_synrgy.entity.enums.JenisRekening;
 import com.example.finalProject_synrgy.repository.RekeningRepository;
+import com.example.finalProject_synrgy.service.QrisService;
 import com.example.finalProject_synrgy.service.RekeningService;
 import com.example.finalProject_synrgy.service.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,9 @@ public class RekeningServiceImpl implements RekeningService {
 
     @Autowired
     ValidationService validationService;
+
+    @Autowired
+    QrisService qrisService;
 
     public String checkIfRekeningExist(RekeningCheckRequest req) {
         validationService.validate(req);
@@ -57,6 +62,10 @@ public class RekeningServiceImpl implements RekeningService {
 
         rekening.setJenisRekening(req.getJenisRekening());
         rekening.setBalance(req.getBalance());
+
+        rekening = rekeningRepository.save(rekening);
+        Qris qris = qrisService.generateQrisRekening(rekening);
+        rekening.setQris(qris);
 
         return rekeningRepository.save(rekening);
     }
@@ -112,6 +121,10 @@ public class RekeningServiceImpl implements RekeningService {
 
         rekening.setJenisRekening(JenisRekening.values()[random.nextInt(JenisRekening.values().length)]);
         rekening.setBalance(random.nextInt(11) * 100000);
+
+        rekening = rekeningRepository.save(rekening);
+        Qris qris = qrisService.generateQrisRekening(rekening);
+        rekening.setQris(qris);
 
         return rekeningRepository.save(rekening);
     }

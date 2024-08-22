@@ -25,7 +25,10 @@ public class Qris {
     private String encodedQrCode;
 
     @JsonIgnore
-    private Integer balance;
+    @OneToOne(mappedBy = "qris")
+    private Rekening rekening;
+
+    private String imageUrl;
 
     private String name;
 }
