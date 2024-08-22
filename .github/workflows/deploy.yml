@@ -27,4 +27,4 @@ jobs:
             ./mvnw package
             kill -9 $(lsof -t -i tcp:8080)
             cd target
-            java -jar finalProject_synrgy-0.0.1-SNAPSHOT.jar &
+            nohup java -jar finalProject_synrgy-0.0.1-SNAPSHOT.jar
