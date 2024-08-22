@@ -25,11 +25,6 @@ jobs:
             git pull
             chmod +x mvnw
             ./mvnw package
-#            sudo docker kill ${{ secrets.REPO_NAME }}
-#            sudo docker rm --force ${{ secrets.REPO_NAME }}
-#            sudo docker rmi --force ${{ secrets.REPO_NAME }}
-#            sudo docker build -t ${{ secrets.REPO_NAME }} .
-#            sudo docker run -d --name ${{ secrets.REPO_NAME }} -p 8080:8080 ${{ secrets.REPO_NAME }} --mount source=data1,target=/data
             kill -9 $(lsof -t -i tcp:8080)
             cd target
             java -jar finalProject_synrgy-0.0.1-SNAPSHOT.jar
