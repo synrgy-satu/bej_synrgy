@@ -52,16 +52,18 @@ public class EmailTemplate {
                 "</head>\n" +
                 "<body>\n" +
                 "\t<div class=\"email-container\">\n" +
-                "\t\t<p>Halo <span class=\"user-name\">{{USERNAME}}</span> Selamat bergabung</p>\n" +
+                "\t\t<p>Halo <span class=\"user-name\">{{USERNAME}}</span> Selamat Bergabung Bersama SATU</p>\n" +
                 "\t\t<p>Harap konfirmasikan email kamu dengan memasukan kode dibawah ini</p>\n" +
                 "\t\t\n" +
                 "\t\tkode: <b>{{TOKEN}}</b>\n" +
+                "\t\t\n" +
+                "<p>Atau dapat langsung mengakses link berikut : {{REDIRECT}}</p>" +
                 "\t\t\n" +
                 "\t\t<p class=\"mt--15\">Jika kamu butuh bantuan atau pertanyaan, hubungi customer care kami di .... atau kirim email ke ....</p>\n" +
                 "\t\t\n" +
                 "\t\t<p>Semoga harimu menyenangkan!</p>\n" +
                 "\t\t\n" +
-                "\t\t<p>PT ABC,</p>\n" +
+                "\t\t<p>SATU,</p>\n" +
                 "\t\t<p class=\"mt--15\".....</p>\n" +
                 "\n" +
                 "\t\t\n" +

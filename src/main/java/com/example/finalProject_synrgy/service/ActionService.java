@@ -18,6 +18,4 @@ public interface ActionService {
     Object addCard(Principal principal, AddCardReq req);
 
     Object payQris(Principal principal, PayQrisReq req);
-
-    Qris checkQris(String targetQris);
 }

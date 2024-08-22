@@ -8,4 +8,6 @@ import java.util.UUID;
 
 public interface QrisRepository extends JpaRepository<Qris, UUID>, JpaSpecificationExecutor<Qris> {
     Qris findByEncodedQrCode(String encodedQrCode);
+
+    boolean existsByNmid(Long nmid);
 }

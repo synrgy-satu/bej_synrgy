@@ -73,8 +73,11 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private EmailSender emailSender;
 
-    @Value("${expired.token.password.minute:}")//FILE_SHOW_RUL
+    @Value("${expired.token.password.minute:}0")//FILE_SHOW_RUL
     private int expiredToken;
+
+    @Value("${fe.redirect.page}")//FILE_SHOW_RUL
+    private String redirectPage;
 
     @Autowired
     private Config config;
@@ -128,13 +131,15 @@ public class AuthServiceImpl implements AuthService {
 
         user.setPhoneNumber(request.getPhoneNumber());
         user.setPin(request.getPin());
-        user.setEnabled(true);
+        user.setEnabled(false);
 
         String password = encoder.encode(request.getPassword().replaceAll("\\s+", ""));
         user.setPassword(password);
 
         List<Role> r = roleRepository.findByNameIn(roleNames);
         user.setRoles(r);
+
+        sendEmailOtp(new EmailRequest(request.getEmailAddress()), "Register");
 
         return userRepository.save(user);
     }
@@ -206,10 +211,12 @@ public class AuthServiceImpl implements AuthService {
             found.setOtpExpiredDate(expirationDate);
             template = template.replaceAll("\\{\\{USERNAME}}", (found.getUsername()));
             template = template.replaceAll("\\{\\{TOKEN}}", otp);
+            template = template.replaceAll("\\{\\{REDIRECT}}", redirectPage);
             userRepository.save(found);
         } else {
             template = template.replaceAll("\\{\\{USERNAME}}", (found.getUsername()));
             template = template.replaceAll("\\{\\{TOKEN}}", found.getOtp());
+            template = template.replaceAll("\\{\\{REDIRECT}}", redirectPage);
         }
         emailSender.sendAsync(found.getEmailAddress(), subject, template);
         return message;

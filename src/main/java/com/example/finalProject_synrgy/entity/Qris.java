@@ -1,17 +1,17 @@
 package com.example.finalProject_synrgy.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
 @Table(name = "qris")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Qris {
@@ -29,6 +29,16 @@ public class Qris {
     private Rekening rekening;
 
     private String imageUrl;
+
+    @Transient
+    @JsonIgnore
+    private String owner;
+
+    private Long nmid;
+
+    private Date activeUntil;
+
+    private boolean isActive;
 
     private String name;
 }

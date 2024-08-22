@@ -43,16 +43,6 @@ public class ActionController {
         return ResponseEntity.ok(BaseResponse.success(actionService.addCard(principal, req), "Success adding card"));
     }
 
-    @GetMapping("checkqris/{qrisCode}")
-    public ResponseEntity<?> getQrisInformation(@PathVariable String qrisCode) {
-        return ResponseEntity.ok(BaseResponse.success(actionService.checkQris(qrisCode), "Succes get Qris information"));
-    }
-
-    @GetMapping("qris")
-    public ResponseEntity<?> getQrisInformation(Principal principal) {
-        return ResponseEntity.ok(BaseResponse.success(qrisService.generateQris(principal), "Succes generate qris"));
-    }
-
     @PostMapping("bayarqris")
     public ResponseEntity<?> getQrisInformation(Principal principal, @RequestBody PayQrisReq req) {
         return ResponseEntity.ok(BaseResponse.success(actionService.payQris(principal, req), "Succes Paying Qris"));
