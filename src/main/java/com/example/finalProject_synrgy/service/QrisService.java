@@ -9,4 +9,10 @@ public interface QrisService {
     public Object generateQris(Principal principal);
 
     public Qris generateQrisRekening(Rekening rekening);
+
+    public Object readQrisList(Principal principal);
+
+    public Object readQris(String id);
+
+    public Object activate(Principal principal, String id, boolean active);
 }

@@ -172,69 +172,75 @@ public class ActionServiceImpl implements ActionService {
     public Object payQris(Principal principal, PayQrisReq req) {
         validationService.validate(req);
 
-        Qris qris = checkQris(req.getTargetQris());
-
         Rekening userCard = rekeningRepository.findByRekeningNumber(req.getDebitedRekeningNumber());
-        if(userCard == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Debited rekening doesn't exist");
+        if (userCard == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Debited rekening doesn't exist");
 
         User user = userRepository.findByUsername(principal.getName());
-        if(!user.getRekenings().contains(userCard)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Debited rekening is not belong to authenticated user");
+        if (!user.getRekenings().contains(userCard))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Debited rekening is not belong to authenticated user");
 
-        if(!Objects.equals(req.getPin(), user.getPin())) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong Pin");
+        if (!Objects.equals(req.getPin(), user.getPin()))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Wrong Pin");
+
+        Qris qris = qrisRepository.findByEncodedQrCode(req.getTargetQris());
+        if (qris == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Target qris doesn't exist");
 
         String referenceNumber = UUID.randomUUID().toString();
 
-        userCard.setBalance(userCard.getBalance() - req.getAmount());
+        int userFinalBalance = userCard.getBalance() - req.getAmount();
+        if (userFinalBalance < 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enough balance on card");
 
-        List<Transaction> userCardTransactions = userCard.getTransactions();
+        userCard.setBalance(userFinalBalance);
 
-        if(userCardTransactions == null) userCardTransactions = new ArrayList<>();
+        int targetFinalBalance = qris.getRekening().getBalance() + req.getAmount();
+        qris.getRekening().setBalance(targetFinalBalance);
 
+        // Transaksi untuk rekening pengirim (userCard)
         Transaction userTransaction = new Transaction();
-
         userTransaction.setAmount(req.getAmount());
         userTransaction.setRekening(userCard);
         userTransaction.setIsDebited(true);
         userTransaction.setJenisTransaksi(JenisTransaksi.TRANSAKSI_KELUAR);
-        userTransaction.setReason(TransactionReason.PEMBAYARAN);
+        userTransaction.setReason(TransactionReason.TRANSFER);
         userTransaction.setReferenceNumber(referenceNumber);
         userTransaction.setVendors(vendorsRepository.findByVendorName("QRIS"));
-        userTransaction.setIsInternal(false);
+        userTransaction.setIsInternal(true);
+        userTransaction.setBalanceHistory(userFinalBalance);
         userTransaction.setNote("-");
 
-        userCardTransactions.add(userTransaction);
+        // Transaksi untuk rekening penerima (targetCard)
+        Transaction targetTransaction = new Transaction();
+        targetTransaction.setAmount(req.getAmount());
+        targetTransaction.setRekening(qris.getRekening());
+        targetTransaction.setIsDebited(false);
+        targetTransaction.setJenisTransaksi(JenisTransaksi.TRANSAKSI_MASUK);
+        targetTransaction.setReason(TransactionReason.TRANSFER);
+        targetTransaction.setReferenceNumber(referenceNumber);
+        targetTransaction.setVendors(vendorsRepository.findByVendorName("QRIS"));
+        targetTransaction.setIsInternal(true);
+        targetTransaction.setBalanceHistory(targetFinalBalance);
+        targetTransaction.setNote("-");
 
+        // Simpan kedua transaksi sekaligus
+        transactionRepository.save(userTransaction);
+        transactionRepository.save(targetTransaction);
+
+        // Simpan rekening setelah perubahan balance dan transaksi
         rekeningRepository.save(userCard);
+        qrisRepository.save(qris);
 
-        return transactionRepository.save(userTransaction);
-    }
+        // memastikan semua perubahan tersimpan ke database
+        entityManager.flush();
 
-    public Qris checkQris(String targetQris) {
-        String keyword = "ID.CO.QRIS.WWW";
+        notificationService.saveNotification("Pembayaran QRIS Berhasil",
+                "Pembayaran QRIS kepada " + qris.getName() + " senilai " + req.getAmount() + " berhasil",
+                user.getUsername());
 
-        if(!targetQris.contains(keyword))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid qris code, make sure qrcode encoded properly");
+        notificationService.saveNotification("Transfer QRIS Berhasil",
+                "Pembayaran QRIS dari " + user.getFullName() + " senilai " + req.getAmount() + " berhasil",
+                qris.getRekening().getUser().getUsername());
 
-        Qris qris = qrisRepository.findByEncodedQrCode(targetQris);
-
-        int index = targetQris.indexOf(keyword);
-
-        String result = targetQris.substring(index + 51 + keyword.length());
-        result = result.replaceAll("\\d", " ").replaceAll("\\s+", " ");
-        String[] words = result.split(" ");
-        String[] firstThreeWords = Arrays.copyOfRange(words, 0, Math.min(3, words.length));
-        result = String.join(" ", firstThreeWords);
-
-        log.info(targetQris);
-        log.info(result);
-
-        if(qris == null) {
-            qris = new Qris();
-            qris.setName(result);
-            qris.setEncodedQrCode(targetQris);
-            qris = qrisRepository.save(qris);
-        }
-
-        return qris;
+        return userTransaction;
     }
 }
