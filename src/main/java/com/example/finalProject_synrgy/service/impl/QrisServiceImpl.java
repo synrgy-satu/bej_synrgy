@@ -13,6 +13,7 @@ import com.google.zxing.oned.EAN13Writer;
 import com.google.zxing.qrcode.QRCodeWriter;
 import org.apache.commons.lang3.SystemUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,6 +30,9 @@ public class QrisServiceImpl implements QrisService {
     @Autowired
     private QrisRepository qrisRepository;
 
+    @Value("${cloud.static.directory.qris}")
+    private String qrisFolder;
+
     @Override
     public Object generateQris(Principal principal) {
         User user = userRepository.findByUsername(principal.getName());
@@ -39,7 +43,7 @@ public class QrisServiceImpl implements QrisService {
             bitMatrix = qrCodeWriter.encode(user.getRekenings().get(0).getRekeningNumber().toString()+","+user.getFullName(),
                     BarcodeFormat.QR_CODE, 300, 300);
             MatrixToImageWriter.writeToPath(bitMatrix, "png",
-                    Paths.get((SystemUtils.IS_OS_LINUX ? "" : ".")+"/data/"+user.getUsername()+".png"));
+                    Paths.get((SystemUtils.IS_OS_LINUX ? qrisFolder : "./data")+"/"+user.getUsername()+".png"));
         } catch (Throwable t) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, t.getMessage());
         }
