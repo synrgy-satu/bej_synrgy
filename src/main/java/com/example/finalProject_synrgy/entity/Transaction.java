@@ -40,6 +40,8 @@ public class Transaction extends BaseDate {
     @JsonIgnore
     private Boolean isDebited;
 
+//    tespush
+
     @JsonIgnore
     private Boolean isInternal;
 
