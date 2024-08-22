@@ -5,6 +5,7 @@ import com.example.finalProject_synrgy.dto.action.TransferReq;
 import com.example.finalProject_synrgy.dto.action.AddCardReq;
 import com.example.finalProject_synrgy.dto.base.BaseResponse;
 import com.example.finalProject_synrgy.service.ActionService;
+import com.example.finalProject_synrgy.service.QrisService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,9 @@ import java.security.Principal;
 public class ActionController {
     @Autowired
     ActionService actionService;
+
+    @Autowired
+    QrisService qrisService;
 
     @GetMapping("/checkbalance")
     public ResponseEntity<?> checkBalance(Principal principal) {
@@ -42,6 +46,11 @@ public class ActionController {
     @GetMapping("checkqris/{qrisCode}")
     public ResponseEntity<?> getQrisInformation(@PathVariable String qrisCode) {
         return ResponseEntity.ok(BaseResponse.success(actionService.checkQris(qrisCode), "Succes get Qris information"));
+    }
+
+    @GetMapping("qris")
+    public ResponseEntity<?> getQrisInformation(Principal principal) {
+        return ResponseEntity.ok(BaseResponse.success(qrisService.generateQris(principal), "Succes generate qris"));
     }
 
     @PostMapping("bayarqris")

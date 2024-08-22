@@ -61,5 +61,10 @@ public class Rekening extends BaseDate {
     @JsonIgnore
     @OneToMany(mappedBy = "rekening", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Transaction> transactions;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "qris_id", referencedColumnName = "id")
+    @JsonIgnore
+    private Qris qris;
 }
 

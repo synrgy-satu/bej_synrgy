@@ -7,10 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
@@ -18,6 +21,8 @@ public class NotificationServiceImpl implements NotificationService {
     NotificationRepository notificationRepository;
     @Autowired
     private PageableHandlerMethodArgumentResolverCustomizer pageableCustomizer;
+    @Autowired
+    private SimpMessagingTemplate simpMessagingTemplate;
 
     public boolean saveNotification(String title, String desc, String belongsTo) {
         Notification notification = new Notification();
@@ -31,6 +36,18 @@ public class NotificationServiceImpl implements NotificationService {
         } catch (Throwable e) {
             return false;
         }
+    }
+
+    public boolean sendNotification(UUID uuid) {
+//        Optional<Notification> notification = notificationRepository.findById(uuid);
+//        simpMessagingTemplate.convertAndSendToUser();
+        return true;
+    }
+
+    public boolean testSendNotification() {
+//        Optional<Notification> notification = notificationRepository.findById(uuid);
+        simpMessagingTemplate.convertAndSendToUser("test", "/queue/notification", "Halo");
+        return true;
     }
 
     public Object get(Principal principal, int size, int pagenum) {

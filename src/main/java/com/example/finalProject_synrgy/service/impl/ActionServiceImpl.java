@@ -202,8 +202,6 @@ public class ActionServiceImpl implements ActionService {
         userTransaction.setIsInternal(false);
         userTransaction.setNote("-");
 
-        qris.setBalance(qris.getBalance() + req.getAmount());
-
         userCardTransactions.add(userTransaction);
 
         rekeningRepository.save(userCard);
@@ -234,7 +232,6 @@ public class ActionServiceImpl implements ActionService {
             qris = new Qris();
             qris.setName(result);
             qris.setEncodedQrCode(targetQris);
-            qris.setBalance(0);
             qris = qrisRepository.save(qris);
         }
 
