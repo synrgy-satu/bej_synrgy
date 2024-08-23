@@ -131,7 +131,7 @@ public class AuthServiceImpl implements AuthService {
 
         user.setPhoneNumber(request.getPhoneNumber());
         user.setPin(request.getPin());
-        user.setEnabled(false);
+        user.setEnabled(true);
 
         String password = encoder.encode(request.getPassword().replaceAll("\\s+", ""));
         user.setPassword(password);
