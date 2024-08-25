@@ -202,7 +202,7 @@ public class ActionServiceImpl implements ActionService {
         userTransaction.setRekening(userCard);
         userTransaction.setIsDebited(true);
         userTransaction.setJenisTransaksi(JenisTransaksi.TRANSAKSI_KELUAR);
-        userTransaction.setReason(TransactionReason.TRANSFER);
+        userTransaction.setReason(TransactionReason.PEMBAYARAN);
         userTransaction.setReferenceNumber(referenceNumber);
         userTransaction.setVendors(vendorsRepository.findByVendorName("QRIS"));
         userTransaction.setIsInternal(true);
@@ -215,7 +215,7 @@ public class ActionServiceImpl implements ActionService {
         targetTransaction.setRekening(qris.getRekening());
         targetTransaction.setIsDebited(false);
         targetTransaction.setJenisTransaksi(JenisTransaksi.TRANSAKSI_MASUK);
-        targetTransaction.setReason(TransactionReason.TRANSFER);
+        targetTransaction.setReason(TransactionReason.PEMBAYARAN);
         targetTransaction.setReferenceNumber(referenceNumber);
         targetTransaction.setVendors(vendorsRepository.findByVendorName("QRIS"));
         targetTransaction.setIsInternal(true);

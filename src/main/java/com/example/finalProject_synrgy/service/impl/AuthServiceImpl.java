@@ -39,6 +39,11 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -177,6 +182,10 @@ public class AuthServiceImpl implements AuthService {
             for (Role role : user.getRoles()) {
                 roles.add(role.getName());
             }
+
+            LocalDateTime localDateTime = LocalDateTime.now();
+            user.setLastLoggedIn(Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant()));
+            userRepository.save(user);
 
             return authMapper.toLoginResponse(response);
         } else {
