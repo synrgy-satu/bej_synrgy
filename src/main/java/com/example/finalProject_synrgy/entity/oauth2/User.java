@@ -111,6 +111,8 @@ public class User extends BaseDate implements UserDetails {
 
     private String phoneNumber;
 
+    private Date lastLoggedIn;
+
 //    @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Rekening> rekenings;
