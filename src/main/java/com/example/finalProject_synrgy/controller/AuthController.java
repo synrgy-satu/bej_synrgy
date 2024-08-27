@@ -206,4 +206,16 @@ public class AuthController {
     ) {
         return ResponseEntity.ok(BaseResponse.success(authService.checkPhoneNumber(phoneNumber), "Succes get phone information"));
     }
+
+    @Operation(summary = "Ganti Password", description = "Pastikan header Authorization terkirim")
+    @PutMapping("edit/password")
+    public ResponseEntity<?> editPassword(Principal principal, @RequestBody EditPasswordDto req) {
+        return ResponseEntity.ok(BaseResponse.success(authService.editPassword(principal, req), "Success edit password"));
+    }
+
+    @Operation(summary = "Ganti Pin", description = "Pastikan header Authorization terkirim")
+    @PutMapping("edit/pin")
+    public ResponseEntity<?> editPin(Principal principal, @RequestBody EditPinDto req) {
+        return ResponseEntity.ok(BaseResponse.success(authService.editPin(principal, req), "Success edit pin"));
+    }
 }

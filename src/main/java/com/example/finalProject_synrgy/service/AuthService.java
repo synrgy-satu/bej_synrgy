@@ -29,4 +29,8 @@ public interface AuthService {
     Object checkPhoneNumber(String phoneNumber);
 
 //    Object signWithGoogle(MultiValueMap<String, String> parameters) throws IOException;
+
+    public Object editPassword(Principal principal, EditPasswordDto req);
+
+    public Object editPin(Principal principal, EditPinDto req);
 }
