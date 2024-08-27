@@ -309,6 +309,30 @@ public class AuthServiceImpl implements AuthService {
         return "Phone number used";
     }
 
+    public Object editPassword(Principal principal, EditPasswordDto req) {
+        validationService.validate(req);
+
+        User user = userRepository.findByUsername(principal.getName());
+        if(!encoder.matches(req.getOldPassword(), user.getPassword())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Wrong old password");
+
+        user.setPassword(encoder.encode(req.getNewPassword()));
+        userRepository.save(user);
+
+        return "Password Changed";
+    }
+
+    public Object editPin(Principal principal, EditPinDto req) {
+        validationService.validate(req);
+
+        User user = userRepository.findByUsername(principal.getName());
+        if(!Objects.equals(user.getPin(), req.getOldPin())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Wrong old pin");
+
+        user.setPin(req.getNewPin());
+        userRepository.save(user);
+
+        return "Pin Changed";
+    }
+
 //    @Override
 //    @Transactional
 //    public Object signWithGoogle(MultiValueMap<String, String> parameters) throws IOException {
